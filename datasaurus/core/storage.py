@@ -1,4 +1,5 @@
 import logging
+import os
 import pathlib
 from abc import abstractmethod, ABC
 from typing import Union
@@ -12,6 +13,10 @@ class _auto_resolve:
 AUTO_RESOLVE = _auto_resolve()
 
 ENVIRONMENT = Union[AUTO_RESOLVE, str]
+
+
+class CannotResolveEnvironmentException(Exception):
+    pass
 
 
 class Storage(ABC):
@@ -71,11 +76,17 @@ class StorageGroup:
     @classmethod
     @property
     def from_env(cls):
-        # TODO De-hardcode it.
-        # Make that it gets ServiceName_environment and Datasaurus_environment.
-        # The ServiceName_environment should be more specific
-        environment = 'ci'
-        return getattr(cls, environment)
+        environment_key = os.getenv(f'{cls.__name__}_ENVIRONMENT')
+
+        if environment_key is None:
+            environment_key = os.getenv('DATASAURUS_ENVIRONMENT')
+
+        try:
+            environment = getattr(cls, environment_key)
+        except TypeError as e:
+            raise CannotResolveEnvironmentException from e
+
+        return environment
 
 
 class LocalStorage(Storage):
