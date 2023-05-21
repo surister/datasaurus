@@ -1,5 +1,6 @@
 import logging
-from collections.abc import Mapping
+import pathlib
+from abc import abstractmethod, ABC
 from typing import Union
 
 
@@ -10,90 +11,69 @@ class _auto_resolve:
 
 AUTO_RESOLVE = _auto_resolve()
 
-
-def resolve_environment():
-    import os
-    environment = os.getenv('DATASAURUS_ENVIRONMENT', None)
+ENVIRONMENT = Union[AUTO_RESOLVE, str]
 
 
-class Storage:
+class Storage(ABC):
     """
     Abc for any Storage class.
     """
 
     def get_uri(self): ...
 
+    @abstractmethod
+    def read_data(self): ...
+
     def __str__(self):
-        return self.__class__.__name__
-
-
-ENVIRONMENT_PARAMETER = Union[AUTO_RESOLVE, str]
+        return self.__class__.__qualname__
 
 
 class ProxyStorage:
     """
-    Holds the reference to the Storage and kees metadate about it, such as:
+    Holds the reference to the Storage and keeps metadata about it, such as:
     - Environment
-    - Storage
+    - Storage type
     """
 
-    def __init__(self, storage: Storage, environment: ENVIRONMENT_PARAMETER):
+    def __init__(self, storage: Storage, environment: ENVIRONMENT):
         self.storage = storage
         self.environment = environment
 
     def __set_name__(self, owner, name):
+        if not isinstance(owner(), StorageGroup):
+            logging.warning('Cannot register ')  # Todo better warning message
+
         if self.environment == AUTO_RESOLVE:
             self.environment = name
 
-        if not isinstance(owner(), ScopedStorage):
-            logging.warning('Cannot register ')
-
-        owner.environments[owner.__name__] = self.environment
+    @property
+    def data(self):
+        return self.storage.read_data()
 
     def __str__(self):
         return f'{self.__class__.__qualname__}<{self.storage}, environment={self.environment}>'
 
 
-def define_storage(storage: Storage, environment: ENVIRONMENT_PARAMETER = AUTO_RESOLVE):
+def define_storage(storage: Storage, environment: ENVIRONMENT = AUTO_RESOLVE):
     return ProxyStorage(storage=storage, environment=environment)
 
 
-class Environments(Mapping):
-    """
-    Dictionary implementation where keys are always holding lists of data, meaning that duplicated
-    keys are allowed.
-    """
-    environments = dict()
-
-    def __getitem__(self, item):
-        return self.environments[item]
-
-    def __setitem__(self, key, value):
-        if key not in self.environments:
-            self.environments[key] = []
-        self.environments[key].append(value)
-        return self
-
-    def __iter__(self):
-        return iter(self.environments)
-
-    def __len__(self):
-        return len(self.environments)
-
-    def __iadd__(self, other):
-        self[other[0]] = other[1]
-        return self
-
-    def __repr__(self):
-        return repr(self.environments)
-
-
-class ScopedStorage:
-    environments = Environments()
+class StorageGroup:
+    @classmethod
+    @property
+    def environments(cls):
+        return [
+            element.environment
+            for element in cls.__dict__.values()
+            if isinstance(element, ProxyStorage)
+        ]
 
     @classmethod
     @property
     def from_env(cls):
+        # TODO De-hardcode it.
+        # Make that it gets ServiceName_environment and Datasaurus_environment.
+        # The ServiceName_environment should be more specific
         environment = 'ci'
         return getattr(cls, environment)
 
@@ -102,3 +82,6 @@ class LocalStorage(Storage):
     def __init__(self, path, file_name=None):
         self.path = path
         self.file_name = file_name
+
+    def read_data(self):
+        return pathlib.Path(self.path + self.file_name).read_text()
