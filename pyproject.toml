@@ -9,6 +9,10 @@ readme = "README.md"
 python = "^3.10"
 
 
+[tool.poetry.group.azure.dependencies]
+azure-storage-blob = "^12.16.0"
+azure-identity = "^1.13.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
