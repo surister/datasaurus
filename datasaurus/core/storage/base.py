@@ -10,7 +10,7 @@ class _auto_resolve:
 
 
 AUTO_RESOLVE = _auto_resolve()
-ENVIRONMENT = Union[AUTO_RESOLVE, str]
+ENVIRONMENT = Union[type(AUTO_RESOLVE), str]
 
 
 class CannotResolveEnvironmentException(Exception):
@@ -25,7 +25,7 @@ class Storage(ABC):
     def get_uri(self): ...
 
     @abstractmethod
-    def read_file(self, file_name: str): ...
+    def read_file(self, file_name: str, columns: list): ...
 
     def __str__(self):
         return self.__class__.__qualname__
@@ -49,8 +49,8 @@ class ProxyStorage:
         if self.environment == AUTO_RESOLVE:
             self.environment = name
 
-    def read_file(self, file_name: str):
-        return self.storage.read_file(file_name)
+    def read_file(self, file_name: str, columns: list[str]):
+        return self.storage.read_file(file_name, columns)
 
     def __str__(self):
         return f'{self.__class__.__qualname__}<{self.storage}, environment={self.environment}>'
@@ -75,6 +75,18 @@ class StorageGroup:
     @classmethod
     @property
     def from_env(cls) -> ProxyStorage:
+        """
+        Tries to infer the environment from two different env variables.
+
+        - {SERVICENAME}_ENVIRONMENT (1)
+        - DATASAURUS_ENVIRONMENT (2)
+
+        (1) Takes precedence over (2)
+        You can use (2) to set a global state of your workflows and fine tune it some Storages
+        with (1) if needed.
+
+        If no environment can be inferred it raises CannotResolveEnvironmentException.
+        """
         environment_key = os.getenv(f'{cls.__name__}_ENVIRONMENT')
 
         if environment_key is None:
