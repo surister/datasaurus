@@ -27,6 +27,10 @@ class Storage(ABC):
     @abstractmethod
     def read_file(self, file_name: str, columns: list): ...
 
+    @abstractmethod
+    def file_exists(self, file_name) -> bool:
+        pass
+
     def __str__(self):
         return self.__class__.__qualname__
 
@@ -51,6 +55,9 @@ class ProxyStorage:
 
     def read_file(self, file_name: str, columns: list[str]):
         return self.storage.read_file(file_name, columns)
+
+    def file_exists(self, file_name: str):
+        return self.storage.file_exists(file_name)
 
     def __str__(self):
         return f'{self.__class__.__qualname__}<{self.storage}, environment={self.environment}>'
