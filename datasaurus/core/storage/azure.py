@@ -1,7 +1,9 @@
 from io import BytesIO
 
-from azure.storage.blob import BlobServiceClient, ContainerClient
-
+try:
+    from azure.storage.blob import BlobServiceClient, ContainerClient
+except:
+    pass
 from datasaurus.core.storage.base import Storage
 
 
@@ -11,7 +13,7 @@ class AzureBlobStorage(Storage):
     def __init__(self, connect_str: str,
                  container_name: str,
                  encoding: str = 'utf-8',
-                 container_client: ContainerClient = None):
+                 container_client = None):
         self.connect_str = connect_str
         self.container_name = container_name
         self.encoding = encoding
