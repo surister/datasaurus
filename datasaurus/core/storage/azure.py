@@ -27,6 +27,12 @@ class AzureBlobStorage(Storage):
         blob_service_client = BlobServiceClient.from_connection_string(self.connect_str)
         return blob_service_client.get_container_client(container=self.container_name)
 
+    def file_exists(self, file_name) -> bool:
+        pass
+
+    def write_file(self, file_name, data, create_table):
+        pass
+
     def read_file(self, file_name: str):
         with BytesIO() as file:
             # We 'download' the data into a temporal BytesIO object.
