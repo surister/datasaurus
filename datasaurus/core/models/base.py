@@ -1,3 +1,5 @@
+from functools import partial
+
 from polars import DataFrame
 
 
@@ -24,6 +26,19 @@ class IntegerField(Field):
     pass
 
 
+class LazyFuncCall:
+    """
+    Wraps around a function and its argument to an object, it will call that function when that
+    object is obtained by __get__, making it lazy.
+    """
+
+    def __init__(self, func: callable, *args, **kwargs):
+        self.func = partial(func, *args, **kwargs)
+
+    def __get__(self, instance, owner):
+        return self.func()
+
+
 class Manager:
     def __init__(self, meta):
         self.storage = getattr(meta, '__storage__')
@@ -32,11 +47,11 @@ class Manager:
     def read_df(self, columns):
         return self.storage.main.read_file(self.table_name, columns)
 
-    def write_df(self):
-        pass
+    def write_df(self, df, create_table: bool):
+        return self.storage.main.write_file(self.table_name, df, create_table)
 
-    def __get__(self, instance, owner):
-        return self.read_df(owner.columns)
+    def data_exists(self) -> bool:
+        return self.storage.main.file_exists(self.table_name)
 
 
 class ModelBase(type):
@@ -58,15 +73,29 @@ class ModelBase(type):
     def _prepare(cls):
         meta = getattr(cls, 'Meta', None)
         manager = Manager(meta=meta)
-        setattr(cls, 'df', manager)
+        setattr(cls, '_should_be_recalculated', getattr(meta, '__recalculate__', False))
+        setattr(cls, '_manager', manager)
+        setattr(cls, 'df', LazyFuncCall(manager.read_df, cls.columns))
 
     @property
     def columns(cls):
         return [str(field) for field in cls.__dict__.values() if
                 isinstance(field, Field)]
 
+    def calculate_data(cls):
+        raise NotImplementedError()
+
+    def exists(cls) -> bool:
+        """
+        Return whether the source data to populate the df exists, can be used to check if it's
+        necessary to calculate the data (for models that are derived of others), or to sanity check
+        read operations.
+        """
+        return cls._manager.data_exists()
+
     def ensure_exists(cls):
-        return cls.df.check()
+        if cls._should_be_recalculated or not cls.exists():
+            cls._manager.write_df(df=cls.calculate_data(cls), create_table=not cls.exists())
 
 
 class Model(metaclass=ModelBase):
