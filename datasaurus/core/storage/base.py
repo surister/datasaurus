@@ -31,6 +31,10 @@ class Storage(ABC):
     def file_exists(self, file_name) -> bool:
         pass
 
+    @abstractmethod
+    def write_file(self, file_name, data, create_table: bool):
+        pass
+
     def __str__(self):
         return self.__class__.__qualname__
 
@@ -58,6 +62,9 @@ class ProxyStorage:
 
     def file_exists(self, file_name: str):
         return self.storage.file_exists(file_name)
+
+    def write_file(self, file_name, df, create_table: bool):
+        return self.storage.write_file(file_name, df, create_table)
 
     def __str__(self):
         return f'{self.__class__.__qualname__}<{self.storage}, environment={self.environment}>'
