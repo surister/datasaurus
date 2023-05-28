@@ -1,6 +1,8 @@
 import json
+import os
 import pathlib
 import sqlite3
+import stat
 import urllib.parse
 from functools import partial
 
@@ -27,16 +29,6 @@ def clean_sql_query(query: str):
     return query.replace("'", "")
 
 
-class LocalStorage(Storage):
-    __slots__ = 'path',
-
-    def __init__(self, path):
-        self.path = path
-
-    def read_file(self, file_name):
-        return pathlib.Path(self.path + file_name).read_text()
-
-
 class Uri(urllib.parse.ParseResult):
     pass
 
@@ -49,6 +41,25 @@ def gen_uri(scheme: str, netloc: str, path: str, params: str, query: str, fragme
 gen_uri_from_scheme_path = partial(gen_uri, netloc='', params='', query='', fragment='')
 
 
+class LocalStorage(Storage):
+    __slots__ = 'path',
+
+    def __init__(self, path):
+        self.path = path
+
+    def file_exists(self, file_name) -> bool:
+        pass
+
+    def write_file(self, file_name, data, create_table: bool):
+        pass
+
+    def read_file(self, file_name):
+        return pathlib.Path(self.path + file_name).read_text()
+
+    def get_uri(self, *args):
+        return gen_uri_from_scheme_path(scheme='file', path=self.path)
+
+
 class SqliteStoragePolars(Storage):
     def __init__(self, url):
         self.url = url
@@ -59,6 +70,23 @@ class SqliteStoragePolars(Storage):
     def read_file(self, file_name: str, columns: list):
         query = f'SELECT {list_to_sql_columns(columns)} FROM {file_name}'
         return pl.read_database(query, self.get_uri())
+
+    def write_file(self, file_name, data: pl.DataFrame, create_table: bool):
+        if_exists = 'append' if self.file_exists(file_name) else 'replace'
+        # 'sqlite:////data//data.sqlite',
+        return data.write_database(
+            table_name=file_name,
+            connection_uri=self.get_uri(),
+            if_exists=if_exists,
+            engine='adbc'
+        )
+
+    def file_exists(self, file_name) -> bool:
+        query = f"SELECT name FROM sqlite_master WHERE name='{file_name}'"
+        print(query)
+        print(pl.read_database(query, self.get_uri()))
+        print(self.get_uri())
+        return pl.read_database(query, self.get_uri()).shape[0] >= 1
 
 
 class SqliteStorage(Storage):
