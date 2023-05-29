@@ -4,16 +4,21 @@ try:
     from azure.storage.blob import BlobServiceClient, ContainerClient
 except:
     pass
-from datasaurus.core.storage.base import Storage
+from datasaurus.core.storage.base import Storage, AUTO_RESOLVE
 
 
 class AzureBlobStorage(Storage):
     __slots__ = ('connect_str', 'container_name', 'encoding', 'container_client')
 
-    def __init__(self, connect_str: str,
+    def __init__(self,
+                 connect_str: str,
                  container_name: str,
                  encoding: str = 'utf-8',
-                 container_client = None):
+                 container_client=None,
+                 name: str = '',
+                 environment: str = AUTO_RESOLVE,
+                 ):
+        super().__init__(name, environment)
         self.connect_str = connect_str
         self.container_name = container_name
         self.encoding = encoding
