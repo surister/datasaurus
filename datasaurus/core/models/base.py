@@ -45,13 +45,13 @@ class Manager:
         self.table_name = getattr(meta, '__table_name__')
 
     def read_df(self, columns):
-        return self.storage.main.read_file(self.table_name, columns)
+        return self.storage.from_env.read_file(self.table_name, columns)
 
     def write_df(self, df, create_table: bool):
-        return self.storage.main.write_file(self.table_name, df, create_table)
+        return self.storage.from_env.write_file(self.table_name, df, create_table)
 
     def data_exists(self) -> bool:
-        return self.storage.main.file_exists(self.table_name)
+        return self.storage.from_env.file_exists(self.table_name)
 
 
 class ModelBase(type):
