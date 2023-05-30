@@ -1,6 +1,10 @@
 from functools import partial
+from typing import Callable
 
+import polars
 from polars import DataFrame
+
+from datasaurus.core.loggers import datasaurus_logger
 
 
 class Field:
@@ -26,13 +30,13 @@ class IntegerField(Field):
     pass
 
 
-class LazyFuncCall:
+class lazy_func:
     """
     Wraps around a function and its argument to an object, it will call that function when that
     object is obtained by __get__, making it lazy.
     """
 
-    def __init__(self, func: callable, *args, **kwargs):
+    def __init__(self, func: Callable, *args, **kwargs):
         self.func = partial(func, *args, **kwargs)
 
     def __get__(self, instance, owner):
@@ -40,15 +44,27 @@ class LazyFuncCall:
 
 
 class Manager:
-    def __init__(self, meta):
+    """
+    Manages DF operations for the Model.
+    """
+
+    def __init__(self, meta, columns: list[str]):
+        self.columns = columns
         self.storage = getattr(meta, '__storage__')
         self.table_name = getattr(meta, '__table_name__')
+
+    def _validate_columns(self, df: polars.DataFrame):
+        datasaurus_logger.debug('Validation columns')
+        if len(set(df.columns) - set(self.columns)) != 0:
+            raise Exception(f"Cannot write df since columns don't match, your dataframe's columns: {df.columns}, your model columns: {self.columns}")
 
     def read_df(self, columns):
         return self.storage.from_env.read_file(self.table_name, columns)
 
-    def write_df(self, df, create_table: bool):
-        return self.storage.from_env.write_file(self.table_name, df, create_table)
+    def write_df(self, df: polars.DataFrame):
+        datasaurus_logger.debug(f'Writing DF for {df}')
+        self._validate_columns(df)
+        return self.storage.from_env.write_file(self.table_name, df)
 
     def data_exists(self) -> bool:
         return self.storage.from_env.file_exists(self.table_name)
@@ -72,10 +88,10 @@ class ModelBase(type):
 
     def _prepare(cls):
         meta = getattr(cls, 'Meta', None)
-        manager = Manager(meta=meta)
+        manager = Manager(meta=meta, columns=cls.columns)
         setattr(cls, '_should_be_recalculated', getattr(meta, '__recalculate__', False))
         setattr(cls, '_manager', manager)
-        setattr(cls, 'df', LazyFuncCall(manager.read_df, cls.columns))
+        setattr(cls, 'df', lazy_func(manager.read_df, cls.columns))
 
     @property
     def columns(cls):
@@ -95,7 +111,7 @@ class ModelBase(type):
 
     def ensure_exists(cls):
         if cls._should_be_recalculated or not cls.exists():
-            cls._manager.write_df(df=cls.calculate_data(cls), create_table=not cls.exists())
+            cls._manager.write_df(df=cls.calculate_data(cls))
 
 
 class Model(metaclass=ModelBase):
