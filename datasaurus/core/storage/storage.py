@@ -4,6 +4,7 @@ from functools import partial
 
 import polars as pl
 
+from datasaurus.core.loggers import datasaurus_logger
 from datasaurus.core.storage.base import Storage, AUTO_RESOLVE
 
 
@@ -42,18 +43,23 @@ class SQLPolarsStorageMixin:
         query = f'SELECT {list_to_sql_columns(columns)} FROM {file_name}'
         return pl.read_database(query, self.get_uri())
 
-    def write_file(self, file_name, data: pl.DataFrame):
+    def write_file(self, file_name, df: pl.DataFrame):
         if_exists = 'append' if self.file_exists(file_name) else 'replace'
-        # 'sqlite:////data//data.sqlite',
-        return data.write_database(
+        datasaurus_logger.debug(f'Attempting to write: {df}')
+        datasaurus_logger.debug(
+            f'Write configuration: { {"table_name": file_name, "connection_uri": self.get_uri(), "if_exists": if_exists} }'
+        )
+        df.write_database(
             table_name=file_name,
             connection_uri=self.get_uri(),
             if_exists=if_exists,
             engine='adbc'
         )
+        datasaurus_logger.debug(f'{file_name} written correctly.')
 
     def file_exists(self, file_name) -> bool:
         query = f"SELECT name FROM sqlite_master WHERE name='{file_name}'"
+        datasaurus_logger.debug(f'Checking if file "{file_name}" exists, running query "{query}"')
         return pl.read_database(query, self.get_uri()).shape[0] >= 1
 
 

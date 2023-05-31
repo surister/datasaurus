@@ -49,12 +49,13 @@ class Manager:
     """
 
     def __init__(self, meta, columns: list[str]):
+        self.meta = meta
         self.columns = columns
         self.storage = getattr(meta, '__storage__')
         self.table_name = getattr(meta, '__table_name__')
 
     def _validate_columns(self, df: polars.DataFrame):
-        datasaurus_logger.debug('Validation columns')
+        datasaurus_logger.debug('Validating columns')
         if len(set(df.columns) - set(self.columns)) != 0:
             raise Exception(f"Cannot write df since columns don't match, your dataframe's columns: {df.columns}, your model columns: {self.columns}")
 
@@ -62,7 +63,8 @@ class Manager:
         return self.storage.from_env.read_file(self.table_name, columns)
 
     def write_df(self, df: polars.DataFrame):
-        datasaurus_logger.debug(f'Writing DF for {df}')
+        if getattr(self.meta, '__auto_select__', False):
+            df = df.select(self.columns)
         self._validate_columns(df)
         return self.storage.from_env.write_file(self.table_name, df)
 
@@ -110,7 +112,10 @@ class ModelBase(type):
         return cls._manager.data_exists()
 
     def ensure_exists(cls):
+        datasaurus_logger.debug(f'Making sure that {cls} exists')
         if cls._should_be_recalculated or not cls.exists():
+            datasaurus_logger.debug(
+                f'The data does not exist or __recalculate__ is set to True, recalculating data..')
             cls._manager.write_df(df=cls.calculate_data(cls))
 
 
