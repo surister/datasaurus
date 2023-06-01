@@ -38,7 +38,7 @@ class Storage(ABC):
         pass
 
     @abstractmethod
-    def write_file(self, file_name, data, create_table: bool):
+    def write_file(self, file_name, data):
         pass
 
     def __set_name__(self, owner, name):
@@ -81,7 +81,7 @@ class StorageGroup:
         service_env_key = os.getenv(f'{cls.__name__}_ENVIRONMENT')
 
         if env_key := datasaurus_env_key or service_env_key:
-            return getattr(cls, env_key) # Todo fix when environment is set
+            return getattr(cls, env_key)  # Todo fix when environment is set
 
         raise CannotResolveEnvironmentException(
             f'Neither DATASAURUS_ENVIRONMENT nor {cls.__name__}_ENVIRONMENT are defined but "from_env" needs any of these two defined in order to resolve the right storage.'
