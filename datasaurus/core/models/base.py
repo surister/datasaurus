@@ -68,7 +68,7 @@ class Manager:
         storage = storage or self.storage.from_env
         if getattr(self.meta, '__auto_select__', False):
             df = df.select(self.columns)
-        self._validate_columns(df)
+        self._validate_columns(df, self.columns)
         return storage.write_file(self.table_name, df)
 
     def data_exists(self, storage=None) -> bool:
