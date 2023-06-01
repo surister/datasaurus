@@ -1,6 +1,5 @@
+import dataclasses
 import pathlib
-import urllib.parse
-from functools import partial
 
 import polars as pl
 
@@ -12,35 +11,47 @@ def list_to_sql_columns(l: list[str]) -> str:
     """
     Transforms ["id", "username"...] into '(id, username)'
     """
-
     return str(l).replace('[', '').replace(']', '').replace("'", "")
 
 
-def list_to_sqlite_jsonobject_query(l: list[str]) -> str:
-    p = [f"'{col}', {col}," for col in l]
-    s = "".join(p)
-    return s[:-1]
+@dataclasses.dataclass
+class Uri:
+    scheme: str = ''
+    user: str = ''
+    password: str = ''
+    host: str = ''
+    port: str = ''
+    path: str = ''
+    query: str = ''
+    fragment: str = ''
 
+    def uri_unparse(self):
+        scheme = self.scheme + "://" if self.scheme else ''
+        user = self.user
+        password = ':' + self.password if self.password else ''
+        host = '@' + self.user if self.user and self.host else ''
 
-def clean_sql_query(query: str):
-    return query.replace("'", "")
+        if self.path.startswith('/'):
+            self.path = self.path.replace('/', '//', 1)
+        path = self.path
+        query = '?' + self.query if self.query else ''
+        fragment = '#' + self.fragment if self.fragment else ''
 
+        return scheme + user + password + host + path + query + fragment
 
-class Uri(urllib.parse.ParseResult):
-    pass
+    def get_uri(self):
+        return self.uri_unparse()
 
-
-def gen_uri(scheme: str, netloc: str, path: str, params: str, query: str, fragment: str):
-    return Uri(scheme=scheme, netloc=netloc, path=path, params=params, query=query,
-               fragment=fragment)
-
-
-gen_uri_from_scheme_path = partial(gen_uri, netloc='', params='', query='', fragment='')
+    def __str__(self) -> str:
+        return f'{self.scheme}'
 
 
 class SQLPolarsStorageMixin:
     def read_file(self, file_name: str, columns: list):
+        datasaurus_logger.debug(f'Trying to read {file_name}')
         query = f'SELECT {list_to_sql_columns(columns)} FROM {file_name}'
+        datasaurus_logger.debug(f'query: {query}')
+        datasaurus_logger.debug(f'uri: {self.get_uri()}')
         return pl.read_database(query, self.get_uri())
 
     def write_file(self, file_name, df: pl.DataFrame):
@@ -82,8 +93,8 @@ class LocalStorage(LocalStorageMixin, Storage):
         super().__init__(name, environment)
         self.path = path
 
-    def get_uri(self, *args):
-        return gen_uri_from_scheme_path(scheme='file', path=self.path)
+    def get_uri(self):
+        return Uri(path=self.path).get_uri()
 
 
 class SqliteStorage(SQLPolarsStorageMixin, Storage):
@@ -92,4 +103,4 @@ class SqliteStorage(SQLPolarsStorageMixin, Storage):
         self.path = path
 
     def get_uri(self) -> str:
-        return gen_uri_from_scheme_path(scheme='sqlite', path=self.path).geturl()
+        return Uri(scheme='sqlite', path=self.path).get_uri()
