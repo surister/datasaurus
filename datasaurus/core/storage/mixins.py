@@ -30,7 +30,6 @@ class SQLStorageOperationsMixin:
             table_name=file_name,
             connection_uri=self.get_uri(),
             if_exists=if_exists,
-            engine='adbc'
         )
         datasaurus_logger.debug(f'{file_name} written correctly.')
 
