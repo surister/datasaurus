@@ -3,6 +3,8 @@ import os
 from abc import abstractmethod, ABC
 from typing import Union
 
+import polars
+
 
 class _auto_resolve:
     def __str__(self):
@@ -30,7 +32,7 @@ class Storage(ABC):
         ...
 
     @abstractmethod
-    def read_file(self, file_name: str, columns: list):
+    def read_file(self, file_name: str, columns: list) -> polars.DataFrame:
         ...
 
     @abstractmethod
@@ -38,7 +40,7 @@ class Storage(ABC):
         pass
 
     @abstractmethod
-    def write_file(self, file_name, data):
+    def write_file(self, file_name, data) -> None:
         pass
 
     def __set_name__(self, owner, name):

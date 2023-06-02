@@ -1,34 +1,14 @@
 from functools import partial
-from typing import Callable
+from typing import Callable, Optional
 
 import polars
 from polars import DataFrame
 
 from datasaurus.core.loggers import datasaurus_logger
 from datasaurus.core.storage.base import Storage
+from datasaurus.core.storage.fields import Field
 
-
-class Field:
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __set_name__(self, owner, name):
-        self.name = name
-
-    def __get__(self, instance, owner):
-        import polars
-        return polars.col(self.name)
-
-    def __str__(self):
-        return self.name
-
-
-class StringField(Field):
-    pass
-
-
-class IntegerField(Field):
-    pass
+NO_DATA = type('NO_DATA', (), {})
 
 
 class lazy_func:
@@ -49,9 +29,8 @@ class Manager:
     Manages DF operations for the Model.
     """
 
-    def __init__(self, meta, columns: list[str]):
+    def __init__(self, meta):
         self.meta = meta
-        self.columns = columns
         self.storage = getattr(meta, '__storage__')
         self.table_name = getattr(meta, '__table_name__')
 
@@ -59,16 +38,21 @@ class Manager:
         datasaurus_logger.debug('Validating columns')
         if len(set(df.columns) - set(columns)) != 0:
             raise Exception(
-                f"Cannot write df since columns don't match, your dataframe's columns: {df.columns}, your model columns: {self.columns}")
+                f"Cannot use the Dataframe since columns don't match, dataframe's columns: {df.columns}, model's columns: {columns}")
 
-    def read_df(self, columns):
-        return self.storage.from_env.read_file(self.table_name, columns)
+    def read_df(self, columns) -> polars.DataFrame | NO_DATA:
+        try:
+            self.storage.from_env.read_file(self.table_name, columns)
+        except RuntimeError as e:
+            if 'no such table' in str(e):
+                return NO_DATA
+            else:
+                raise e
 
-    def write_df(self, df: polars.DataFrame, storage: Storage = None):
+    def write_df(self, df: polars.DataFrame, storage: Storage = None) -> None:
         storage = storage or self.storage.from_env
         if getattr(self.meta, '__auto_select__', False):
             df = df.select(self.columns)
-        self._validate_columns(df, self.columns)
         return storage.write_file(self.table_name, df)
 
     def data_exists(self, storage=None) -> bool:
@@ -78,6 +62,9 @@ class Manager:
 
 class ModelBase(type):
     df: DataFrame
+    _manager: Manager
+    _data_from_cls: Optional[
+        dict] = None  # This is where the data from cls.from_dict will be stored temporarily
 
     def __new__(cls, name, bases, attrs, **kwargs):
         super_new = super().__new__
@@ -94,10 +81,10 @@ class ModelBase(type):
 
     def _prepare(cls):
         meta = getattr(cls, 'Meta', None)
-        manager = Manager(meta=meta, columns=cls.columns)
+        manager = Manager(meta=meta)
         setattr(cls, '_should_be_recalculated', getattr(meta, '__recalculate__', False))
         setattr(cls, '_manager', manager)
-        setattr(cls, 'df', lazy_func(manager.read_df, cls.columns))
+        setattr(cls, 'df', lazy_func(cls._get_df))
 
     @property
     def columns(cls):
@@ -114,12 +101,39 @@ class ModelBase(type):
         """
         return cls._manager.data_exists(storage)
 
-    def ensure_exists(cls, read_from=None, write_to=None):
-        datasaurus_logger.debug(f'Making sure that {cls} exists')
-        if cls._should_be_recalculated or not cls.exists(storage=read_from):
-            datasaurus_logger.debug(
-                f'The data does not exist or __recalculate__ is set to True, recalculating data..')
-            cls._manager.write_df(df=cls.calculate_data(cls), storage=write_to)
+    def save(cls, to=None):
+        datasaurus_logger.debug(f'Writing {cls}')
+        df = cls.df
+        cls._manager._validate_columns(df, cls.columns)
+        cls._manager.write_df(df=df, storage=to)
+
+    def from_dict(cls, d: dict):
+        setattr(cls, '_data_from_cls', d)
+        return cls
+
+    def _get_df(cls):
+        def inner_get_df():
+            """
+            1. Data from constructor
+            2. Data from calculation
+            3. Data from Storage
+            """
+            if cls._data_from_cls:
+                df = polars.DataFrame(cls._data_from_cls)
+                del cls._data_from_cls
+                cls._data_from_cls = None
+                return df
+
+            if cls._should_be_recalculated:
+                df = cls.calculate_data()
+                return df
+
+            df = cls._manager.read_df(cls.columns)
+            return df
+
+        df = inner_get_df()
+        cls._manager._validate_columns(df, cls.columns)
+        return df
 
 
 class Model(metaclass=ModelBase):
