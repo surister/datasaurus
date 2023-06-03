@@ -12,6 +12,9 @@
 - [ ] Create pattern Workflow/Transformation for Multimodel
 - [ ] Investigate whether ModelBase metaclass's function columns, calculate_data, exists,
   ensure_Exists.. should be out of the metaclass
+- [ ] Allow for a model to be created from a dictionary
+- [ ] Come up with a pattern for 1:n and n:n model transformations.
+- [ ] Improve class Meta implementation.
 
 # Fields
 - [ ] Add column_name option to Fields
@@ -25,6 +28,9 @@
 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
+- [ ] Create utility that can give you Model code from inferred data like django inspectdb
+- [ ] Ability to create dummy data from a given Model, (maybe implement with faker boy?)
 
 # For the future
 - [ ] Support delta tables
+- [ ] Fully support streaming
