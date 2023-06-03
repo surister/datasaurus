@@ -4,7 +4,6 @@ from typing import Callable, Optional
 import polars
 from polars import DataFrame
 
-from datasaurus.core.loggers import datasaurus_logger
 from datasaurus.core.storage.base import Storage, StorageGroup
 from datasaurus.core.storage.fields import Field
 
@@ -24,10 +23,48 @@ class lazy_func:
         return self.func()
 
 
+class Options:
+    supported_opts = [
+        'storage',
+        'table_name',
+        'auto_select',
+        'recalculate',
+    ]
+
+    def __init__(self, meta):
+        self.meta = meta
+
+        self.storage = None
+        self.table_name = ''
+        self.auto_select = False
+        self.recalculate = False
+        self._prepare()
+
+    def _prepare(self):
+        """
+        We set every meta option to the cls, if the attr does not exist in cls.supported_opts raise
+        a ValueError.
+        """
+        opts = self.meta.__dict__.copy()
+        for attr in self.meta.__dict__:
+            if attr.startswith('_'):
+                # We do not support dunder options, and don't
+                # care about default class attrs like __doc__
+                del opts[attr]
+
+            if attr in self.supported_opts:
+                setattr(self, attr, getattr(self.meta, attr))
+                del opts[attr]
+
+        if opts:
+            raise ValueError(f'Invalid Meta options exists: {opts}')
+
+
 class ModelBase(type):
     df: DataFrame
-    _data_from_cls: Optional[
-        dict] = None  # This is where the data from cls.from_dict will be stored temporarily
+    _meta: Options
+    # This is where the data from cls.from_dict will be stored temporarily
+    _data_from_cls: Optional[dict] = None
 
     def __new__(cls, name, bases, attrs, **kwargs):
         super_new = super().__new__
@@ -44,8 +81,7 @@ class ModelBase(type):
 
     def _prepare(cls):
         meta = getattr(cls, 'Meta', None)
-        setattr(cls, '_meta', meta)
-        setattr(cls, '_should_be_recalculated', getattr(meta, '__recalculate__', False))
+        setattr(cls, '_meta', Options(meta))
         setattr(cls, 'df', lazy_func(cls._get_df))
 
     @property
@@ -57,11 +93,11 @@ class ModelBase(type):
         """
         Used to get either the correct Storage instance or the default Meta storage.
         """
-        storage = storage or cls._meta.__storage__
+        storage = storage or cls._meta.storage
         if not isinstance(storage, Storage):
-            if  StorageGroup in storage.__bases__ and len(storage.__bases__) == 1:
+            if StorageGroup in storage.__bases__ and len(storage.__bases__) == 1:
                 # If we use Model.save(to=Storage) instead of
-                # using Storage.from_env, or Storage.environment
+                # Storage.from_env or Storage.environment
                 # directly when passing the storage, we'll receive a StorageGroup instead
                 # of a storage, by default we'll just take it from the environment.
                 storage = storage.from_env
@@ -81,18 +117,18 @@ class ModelBase(type):
             del cls._data_from_cls
             cls._data_from_cls = None
 
-        elif cls._should_be_recalculated:
+        elif cls._meta.recalculate:
             df = cls.calculate_data(cls)
 
         else:
             using = cls._get_storage_or_default(using)
-            df = using.read_file(cls._meta.__table_name__, cls.columns)
+            df = using.read_file(cls._meta.table_name, cls.columns)
         return df
 
     def _get_df(cls, storage: Optional[Storage] = None):
         df = cls._create_df(using=storage)
 
-        if getattr(cls._meta, '__auto_select__', False):
+        if cls._meta.auto_select:
             df = df.select(cls.columns)
 
         columns_from_df = frozenset(df.columns)
@@ -117,4 +153,4 @@ class Model(metaclass=ModelBase):
     def save(cls, to: 'Storage' = None):
         storage = cls._get_storage_or_default(to)
         df = cls._get_df(storage)
-        storage.write_file(df, cls._meta.__table_name__)
+        storage.write_file(df, cls._meta.table_name)
