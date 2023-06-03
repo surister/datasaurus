@@ -5,6 +5,8 @@ from typing import Union
 
 import polars
 
+from datasaurus.core.models import DataFormat, FormatNotSet
+
 
 class _auto_resolve:
     def __str__(self):
@@ -23,6 +25,7 @@ class Storage(ABC):
     """
     Abc for any Storage class.
     """
+    supported_formats: DataFormat = type('NoFormat', (FormatNotSet,), {})()
 
     def __init__(self, name: str, environment: ENVIRONMENT):
         self.environment = environment
@@ -40,8 +43,11 @@ class Storage(ABC):
         pass
 
     @abstractmethod
-    def write_file(self, data, file_name) -> None:
+    def write_file(self, data, file_name, format, **kwargs) -> None:
         pass
+
+    def supports_format(self, format: DataFormat):
+        return format in self.supported_formats
 
     def __set_name__(self, owner, name):
         if not isinstance(owner(), StorageGroup):

@@ -4,6 +4,7 @@ from typing import Callable, Optional
 import polars
 from polars import DataFrame
 
+from datasaurus.core.models import DataFormat
 from datasaurus.core.storage.base import Storage, StorageGroup
 from datasaurus.core.storage.fields import Field
 
@@ -27,6 +28,7 @@ class Options:
         'table_name',
         'auto_select',
         'recalculate',
+        'format'
     ]
 
     def __init__(self, meta):
@@ -36,6 +38,8 @@ class Options:
         self.table_name = ''
         self.auto_select = False
         self.recalculate = False
+        self.format = None
+
         self._prepare()
 
     def _prepare(self):
@@ -101,6 +105,13 @@ class ModelBase(type):
                 storage = storage.from_env
         return storage
 
+    def _get_format_or_default(cls, format: Optional[DataFormat]):
+        if not format and cls._meta.table_name.__contains__('.'):
+            table_name, file_extension = cls._meta.table_name.split('.')
+            if file_extension:
+                format = file_extension
+        return format
+
     def _create_df(cls, using: Optional[Storage]) -> DataFrame:
         """
         Does the heavy lifting of creating the Dataframe from the right data source, depending on
@@ -123,7 +134,7 @@ class ModelBase(type):
             df = using.read_file(cls._meta.table_name, cls.columns)
         return df
 
-    def _get_df(cls, storage: Optional[Storage] = None):
+    def _get_df(cls, storage: Optional[Storage | StorageGroup] = None):
         df = cls._create_df(using=storage)
 
         if cls._meta.auto_select:
@@ -148,7 +159,20 @@ class Model(metaclass=ModelBase):
         raise NotImplementedError()
 
     @classmethod
-    def save(cls, to: 'Storage' = None):
+    def save(cls, to: 'Storage' = None, format: DataFormat = None, **kwargs):
         storage = cls._get_storage_or_default(to)
-        df = cls._get_df(storage)
-        storage.write_file(df, cls._meta.table_name)
+        format = cls._get_format_or_default(format)
+
+        if format and not storage.supports_format(format):
+            raise ValueError(
+                f"Storage of type '{type(storage)}' does not support format '{format}',"
+                f" supported formats by this storage are '{storage.supported_formats}'"
+            )
+
+        if storage.needs_format and not format:
+            raise Exception(
+                f"Cannot save Dataframe because storage of type '{type(storage)}' needs a format"
+            )
+
+        df = cls._get_df()
+        storage.write_file(df, cls._meta.table_name, format, **kwargs)

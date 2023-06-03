@@ -3,6 +3,7 @@ import pathlib
 import polars as pl
 
 from datasaurus.core.loggers import datasaurus_logger
+from datasaurus.core.models import LOCAL_FORMAT
 
 
 def list_to_sql_columns(l: list[str]) -> str:
@@ -46,12 +47,18 @@ class SQLStorageOperationsMixin:
 
 
 class LocalStorageOperationsMixin:
+    supported_formats = LOCAL_FORMAT
+    needs_format = True
+
     def file_exists(self, file_name) -> bool:
         return pathlib.Path(self.get_uri()).exists()
 
-    def write_file(self, data, file_name: str):
-        # TODO see what to do with file_name here.
-        return pathlib.Path(self.get_uri()).write_text(data)
+    def write_file(self, data: pl.DataFrame, file_name: str,
+                   format: LOCAL_FORMAT, **kwargs):
+        file_name = kwargs.get('overriden_filename') or file_name
+        full_path = f'{self.path}{file_name}.{format.name}' if format else file_name
+        _write_func = getattr(data, f'write_{format.name}')
+        return _write_func(full_path)
 
-    def read_file(self, file_name):
+    def read_file(self, file_name, format: LOCAL_FORMAT):
         return pathlib.Path(self.get_uri()).read_text()
