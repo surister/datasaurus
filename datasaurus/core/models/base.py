@@ -7,8 +7,6 @@ from polars import DataFrame
 from datasaurus.core.storage.base import Storage, StorageGroup
 from datasaurus.core.storage.fields import Field
 
-NO_DATA = type('NO_DATA', (), {})
-
 
 class lazy_func:
     """
