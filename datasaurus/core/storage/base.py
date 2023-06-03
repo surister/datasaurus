@@ -40,7 +40,7 @@ class Storage(ABC):
         pass
 
     @abstractmethod
-    def write_file(self, file_name, data) -> None:
+    def write_file(self, data, file_name) -> None:
         pass
 
     def __set_name__(self, owner, name):
