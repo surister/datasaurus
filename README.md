@@ -10,23 +10,29 @@ data pipelines, ETLs or data manipulation programs.
 - ✅ Fully support read/write operations.
 - ⭕ Not yet but will be implemented.
 - 💀 Won't be implemented in the near future.
+
 ### Storages:
 - Sqlite ✅
 - PostgresSQL ✅
 - MySQL/MariaDB ⭕
-- Local Storage ⭕
+- Local Storage ✅
 - Azure blob storage ⭕
 - AWS S3 ⭕
 
 
-### Non SQL formats:
-- CSV ⭕
-- JSON ⭕
-- PARQUET ⭕
-
+### Formats:
+- CSV ✅
+- JSON ✅
+- PARQUET ✅
+- EXCEL ✅
+- AVRO ✅
+- TSV ⭕
+- SQL ⭕ (Like sql inserts)
+- 
 ### Features:
 - Delta Tables ⭕
 - Field validations ⭕
+
 ## Simple example
 ```python
 # settings.py 
@@ -52,8 +58,8 @@ class ProfileModel(Model):
     sex = StringField()
 
     class Meta:
-        __storage__ = ProfilesData
-        __table_name__ = 'PROFILE'
+        storage = ProfilesData
+        table_name = 'PROFILE'
 
 ```
 
@@ -61,7 +67,7 @@ We can access the raw Polar's dataframe with 'Model.df', it's lazy, meaning it'l
 data if we access the attribute.
 
 ```py
->> > ProfileModel.df
+>>> ProfileModel.df
 shape: (100, 4)
 ┌─────┬────────────────────┬──────────────────────────┬─────┐
 │ id  ┆ username           ┆ mail                     ┆ sex │
@@ -103,10 +109,10 @@ class FemaleProfiles(Model):
         )
 
     class Meta:
-        __auto_select__ = True
-        __recalculate__ = True
-        __storage__ = ProfilesData
-        __table_name__ = 'PROFILE_FEMALES'
+        auto_select = True
+        recalculate = True
+        storage = ProfilesData
+        table_name = 'PROFILE_FEMALES'
 ```
 Et voilá! We can now create new dataframes from other dataframes, 
 
@@ -128,10 +134,16 @@ move data around.
 You could for example call:
 
 ```python
-FemaleProfiles.ensure_exists(write_to=ProfilesData.live)
+FemaleProfiles.save(to=ProfilesData.live)
 ```
 
 Effectively moving data from SQLITE (dev) to PostgreSQL (live), 
 
+```python
+# Can also change formats
+FemaleProfiles.save(to=ProfilesData.otherenvironment, format=LocalFormat.JSON)
+FemaleProfiles.save(to=ProfilesData.otherenvironment, format=LocalFormat.CSV)
+FemaleProfiles.save(to=ProfilesData.otherenvironment, format=LocalFormat.PARQUET)
+```
 
 
