@@ -169,3 +169,4 @@ test.py
 sqlitetest.py
 *.sqlite
 *.json
+data
