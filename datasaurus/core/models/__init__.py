@@ -13,7 +13,7 @@ class FormatNotSet(DataFormat):
         return 'FormatsNotSet'
 
 
-class LOCAL_FORMAT(DataFormat, Enum):
+class FileFormat(DataFormat, Enum):
     @property
     def name(self) -> str:
         return super().name.lower()
