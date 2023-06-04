@@ -35,7 +35,7 @@ class Storage(ABC):
         ...
 
     @abstractmethod
-    def read_file(self, file_name: str, columns: list) -> polars.DataFrame:
+    def read_file(self, file_name: str, columns: list, format: DataFormat) -> polars.DataFrame:
         ...
 
     @abstractmethod
