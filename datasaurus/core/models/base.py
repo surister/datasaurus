@@ -131,7 +131,13 @@ class ModelBase(type):
 
         else:
             using = cls._get_storage_or_default(using)
-            df = using.read_file(cls._meta.table_name, cls.columns)
+            format = cls._meta.format
+            if format and not using.supports_format(format):
+                raise ValueError(
+                    f"Storage of type '{type(using)}' does not support format '{format}',"
+                    f" supported formats by this storage are '{using.supported_formats}'"
+                )
+            df = using.read_file(cls._meta.table_name, cls.columns, format)
         return df
 
     def _get_df(cls, storage: Optional[Storage | StorageGroup] = None):
