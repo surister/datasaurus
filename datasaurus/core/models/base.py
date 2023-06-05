@@ -85,9 +85,9 @@ class ModelBase(type):
         meta = getattr(cls, 'Meta', None)
         setattr(cls, '_meta', Options(meta))
         setattr(cls, 'df', lazy_func(cls._get_df))
+        setattr(cls, 'columns', cls._get_fields())
 
-    @property
-    def columns(cls):
+    def _get_fields(cls):
         return [str(column) for column in cls.__dict__.values() if
                 isinstance(column, Field)]
 
