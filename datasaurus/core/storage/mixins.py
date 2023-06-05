@@ -22,7 +22,7 @@ class SQLStorageOperationsMixin:
         datasaurus_logger.debug(f'uri: {self.get_uri()}')
         return pl.read_database(query, self.get_uri())
 
-    def write_file(self, df: pl.DataFrame, file_name: str):
+    def write_file(self, df: pl.DataFrame, file_name: str, **kwargs):
         if_exists = 'append' if self.file_exists(file_name) else 'replace'
         datasaurus_logger.debug(f'Attempting to write: {df}')
         datasaurus_logger.debug(
@@ -63,7 +63,11 @@ class LocalStorageOperationsMixin:
     def read_file(self, file_name, columns, format: FileFormat = None, **kwargs):
         srcdir = pathlib.Path(self.path)
         full_path = (srcdir / file_name).with_suffix(f'.{format.name}')
+
         if not full_path.exists():
             raise ValueError(f"Cannot find '{full_path}'")
+
         _read_func = getattr(pl, f'read_{format.name}')
+
         return _read_func(full_path)
+
