@@ -106,6 +106,9 @@ class ModelBase(type):
         return storage
 
     def _get_format_or_default(cls, format: Optional[DataFormat]):
+        """
+        If not format is given tries to infer it from the Meta.table_name
+        """
         if not format and cls._meta.table_name.__contains__('.'):
             table_name, file_extension = cls._meta.table_name.split('.')
             if file_extension:
@@ -141,6 +144,9 @@ class ModelBase(type):
         return df
 
     def _get_df(cls, storage: Optional[Storage | StorageGroup] = None):
+        """
+        Applies schema validation, data validations and options to the newly created dataframe.
+        """
         df = cls._create_df(using=storage)
 
         if cls._meta.auto_select:
@@ -155,12 +161,13 @@ class ModelBase(type):
             )
         return df
 
+
+class Model(metaclass=ModelBase):
+    @classmethod
     def from_dict(cls, d: dict):
         setattr(cls, '_data_from_cls', d)
         return cls
 
-
-class Model(metaclass=ModelBase):
     def calculate_data(self):
         raise NotImplementedError()
 
@@ -181,4 +188,4 @@ class Model(metaclass=ModelBase):
             )
 
         df = cls._get_df()
-        storage.write_file(df, cls._meta.table_name, format, **kwargs)
+        storage.write_file(df, cls._meta.table_name, format=format, **kwargs)
