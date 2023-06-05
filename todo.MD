@@ -12,6 +12,7 @@
 - [x] Allow for a model df to be created from a dictionary
 - [x] Improve class Meta implementation.
 - [x] Make it so we can store new generated data in different FORMATS
+- [x] Create new constructor to build df from a dictionary
 
 # Models
 - [ ] Create pattern Workflow/Transformation for Multimodel
@@ -26,6 +27,10 @@
 - [ ] Make read/write operations to respect Fields options, like 'unique', 'column_name'
 - [ ] Make write operations respect __overwrite__, it should always be True.
 - [ ] Change string SQL queries to something that build SQL queries safely.
+- [ ] Make tests where we do all possible IO combinations with all mixin implementations
+
+# General Stuff
+- [ ] Create custom exceptions, we are currently using Exception and ValueError everywhere. 
 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
