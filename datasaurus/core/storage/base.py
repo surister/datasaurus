@@ -26,6 +26,7 @@ class Storage(ABC):
     Abc for any Storage class.
     """
     supported_formats: DataFormat = type('NoFormat', (FormatNotSet,), {})()
+    needs_format: bool = False
 
     def __init__(self, name: str, environment: ENVIRONMENT):
         self.environment = environment
