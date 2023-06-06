@@ -13,11 +13,14 @@
 - [x] Improve class Meta implementation.
 - [x] Make it so we can store new generated data in different FORMATS
 - [x] Create new constructor to build df from a dictionary
+- [x] Raise exception when no Meta is present.
 
 # Models
-- [ ] Create pattern Workflow/Transformation for Multimodel
+- [ ] Create pattern Workflow/Transformation for Multimodel.
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
-- [ ] Raise exception when no Meta is present.
+- [ ] Allow for inheritance where fields and Meta options are gotten from bases.
+- [ ] Improve Model.save api: allow always for table_name override.
+- [ ] Improve Model.save api: allow always for environment (as string) override.
 
 # Fields
 - [ ] Add column_name option to Fields
@@ -25,9 +28,10 @@
 
 # Storages + IO
 - [ ] Make read/write operations to respect Fields options, like 'unique', 'column_name'
-- [ ] Make write operations respect __overwrite__, it should always be True.
+- [ ] Make write operations respect __overwrite__, it should be True by default.
 - [ ] Change string SQL queries to something that build SQL queries safely.
 - [ ] Make tests where we do all possible IO combinations with all mixin implementations
+- [ ] Implement ndjson format
 
 # General Stuff
 - [ ] Create custom exceptions, we are currently using Exception and ValueError everywhere. 
