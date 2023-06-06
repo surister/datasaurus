@@ -5,7 +5,7 @@ from typing import Union
 
 import polars
 
-from datasaurus.core.models import DataFormat, FormatNotSet
+from datasaurus.core.models.format import DataFormat, FormatNotSet
 
 
 class _auto_resolve:

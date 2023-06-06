@@ -4,7 +4,7 @@ from typing import Callable, Optional
 import polars
 from polars import DataFrame
 
-from datasaurus.core.models import DataFormat
+from datasaurus.core.models.format import DataFormat
 from datasaurus.core.storage.base import Storage, StorageGroup
 from datasaurus.core.storage.fields import Field
 
@@ -83,6 +83,9 @@ class ModelBase(type):
 
     def _prepare(cls):
         meta = getattr(cls, 'Meta', None)
+        if not meta:
+            raise MissingMeta(f'Model {cls} does not have Meta')
+
         setattr(cls, '_meta', Options(meta))
         setattr(cls, 'df', lazy_func(cls._get_df))
         setattr(cls, 'columns', cls._get_fields())
@@ -163,6 +166,16 @@ class ModelBase(type):
 
 
 class Model(metaclass=ModelBase):
+    def __init__(self, **kwargs):
+        for column, column_value in kwargs.items():
+            if column not in self.columns:
+                raise ValueError(f"{self} does not have column '{column}', columns are: {self.columns}")
+            setattr(self, column, column_value)
+
+    def __str__(self):
+        cls_name = self.__class__.__qualname__
+        return f'<{cls_name}: {cls_name} object ({", ".join(self.columns)})>'
+
     @classmethod
     def from_dict(cls, d: dict):
         setattr(cls, '_data_from_cls', d)
