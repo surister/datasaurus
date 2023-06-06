@@ -1,25 +1,7 @@
 from enum import Enum, auto
 
+from datasaurus.core.models.base import Model
+from datasaurus.core.models.format import FileFormat, FormatNotSet, DataFormat
+from datasaurus.core.models.exceptions import MissingMeta
 
-class DataFormat:
-    pass
-
-
-class FormatNotSet(DataFormat):
-    def __contains__(self, item):
-        return False
-
-    def __str__(self):
-        return 'FormatsNotSet'
-
-
-class FileFormat(DataFormat, Enum):
-    @property
-    def name(self) -> str:
-        return super().name.lower()
-
-    JSON = auto()
-    CSV = auto()
-    PARQUET = auto()
-    EXCEL = auto()
-    AVRO = auto()
+__all__ = ['Model', 'FileFormat', 'FormatNotSet', 'DataFormat', 'MissingMeta']
