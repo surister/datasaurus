@@ -4,7 +4,7 @@ import pathlib
 import polars as pl
 
 from datasaurus.core.loggers import datasaurus_logger
-from datasaurus.core.models import FileFormat
+from datasaurus.core.models.format import FileFormat
 
 
 def list_to_sql_columns(l: list[str]) -> str:
