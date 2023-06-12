@@ -14,11 +14,11 @@
 - [x] Make it so we can store new generated data in different FORMATS
 - [x] Create new constructor to build df from a dictionary
 - [x] Raise exception when no Meta is present.
+- [x] Allow for inheritance where fields and Meta options are gotten from bases.
 
 # Models
 - [ ] Create pattern Workflow/Transformation for Multimodel.
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
-- [ ] Allow for inheritance where fields and Meta options are gotten from bases.
 - [ ] Improve Model.save api: allow always for table_name override.
 - [ ] Improve Model.save api: allow always for environment (as string) override.
 
@@ -39,8 +39,7 @@
 # Nice things to have
 - [ ] Support Azure blob storage read/write
 - [ ] Create utility that can give you Model code from inferred data like django inspectdb
-- [ ] Ability to create dummy data from a given Model, (maybe implement with faker boy?)
-
+- [ ] Ability to create dummy data from a given Model, (maybe implement with faker boy)
 # For the future
 - [ ] Support delta tables
 - [ ] Fully support streaming
