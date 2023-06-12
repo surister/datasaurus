@@ -81,7 +81,7 @@ class StorageGroup:
         - DATASAURUS_ENVIRONMENT (2)
 
         (1) Takes precedence over (2)
-        You can use (2) to set a global state of your workflows and fine tune it some Storages
+        You can use (2) to set a global state of your workflows and fine tune some Storages
         with (1) if needed.
 
         If no environment can be inferred it raises CannotResolveEnvironmentException.
@@ -90,7 +90,7 @@ class StorageGroup:
         service_env_key = os.getenv(f'{cls.__name__}_ENVIRONMENT')
 
         if env_key := datasaurus_env_key or service_env_key:
-            return getattr(cls, env_key)  # Todo fix when environment is set
+            return getattr(cls, env_key)
 
         raise CannotResolveEnvironmentException(
             f'Neither DATASAURUS_ENVIRONMENT nor {cls.__name__}_ENVIRONMENT are defined but "from_env" needs any of these two defined in order to resolve the right storage.'
