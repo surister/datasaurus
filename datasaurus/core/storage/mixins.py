@@ -1,4 +1,3 @@
-import contextlib
 import pathlib
 
 import polars as pl
@@ -70,4 +69,3 @@ class LocalStorageOperationsMixin:
         _read_func = getattr(pl, f'read_{format.name}')
 
         return _read_func(full_path)
-
