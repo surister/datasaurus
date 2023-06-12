@@ -4,6 +4,7 @@ from typing import Callable, Optional
 import polars
 from polars import DataFrame
 
+from datasaurus.core.models.exceptions import MissingMeta
 from datasaurus.core.models.format import DataFormat
 from datasaurus.core.storage.base import Storage, StorageGroup
 from datasaurus.core.storage.fields import Field
@@ -23,29 +24,61 @@ class lazy_func:
 
 
 class Options:
-    supported_opts = [
+    supported_opts_from_meta = [
         'storage',
         'table_name',
         'auto_select',
         'recalculate',
-        'format'
+        'format',
+        'fields',
     ]
 
-    def __init__(self, meta):
+    def __init__(self, meta, model):
         self.meta = meta
+        self.model = model
 
+        # Options from meta
         self.storage = None
         self.table_name = ''
         self.auto_select = False
         self.recalculate = False
         self.format = None
 
-        self._prepare()
+        # Options from model
+        self.fields_dict = {}
+        self.fields = []
 
-    def _prepare(self):
+        self._populate_from_meta()
+        self._populate_from_model()
+
+    def _populate_from_model(self):
         """
-        We set every meta option to the cls, if the attr does not exist in cls.supported_opts raise
-        a ValueError.
+        Populates Options values from the given model on the __init__, we inherit fields from the parent classes
+        if they are models.
+        """
+        # Fields defined in the current model.
+        new_fields = {
+            field_name: field for field_name, field in self.model.__dict__.items() if isinstance(field, Field)
+        }
+
+        # Set fields from base classes.
+        for base in self.model.mro()[:1]:  # We ignore the first one because its itself, otherwise it conflicts.
+            if hasattr(base, '_meta'):
+                for parent_field in base._meta.fields:
+                    if parent_field in new_fields:
+                        raise ValueError(
+                            f"Field '{parent_field}' from {self.model} clashes with parent model {base}"
+                        )
+
+                new_fields.update(base._meta.fields_dict)
+
+        self.fields = list(new_fields.keys())
+        self.fields_dict = new_fields
+
+    def _populate_from_meta(self):
+        """
+        Populates Options values from the Meta class given on the __init__, only options from supported_opts_from_meta
+        are populated, raises Value error if there is an option in Meta that is not defined in supported_opts..
         """
         opts = self.meta.__dict__.copy()
         for attr in self.meta.__dict__:
@@ -54,12 +87,15 @@ class Options:
                 # care about default class attrs like __doc__
                 del opts[attr]
 
-            if attr in self.supported_opts:
+            if attr in self.supported_opts_from_meta:
                 setattr(self, attr, getattr(self.meta, attr))
                 del opts[attr]
 
         if opts:
             raise ValueError(f'Invalid Meta options exists: {opts}')
+
+    def __str__(self):
+        return f'{self.__class__.__qualname__}({vars(self)})'
 
 
 class ModelBase(type):
@@ -86,9 +122,10 @@ class ModelBase(type):
         if not meta:
             raise MissingMeta(f'Model {cls} does not have Meta')
 
-        setattr(cls, '_meta', Options(meta))
+        opts = Options(meta, cls)
+
+        setattr(cls, '_meta', opts)
         setattr(cls, 'df', lazy_func(cls._get_df))
-        setattr(cls, 'columns', cls._get_fields())
 
     def _get_fields(cls):
         return [str(column) for column in cls.__dict__.values() if
@@ -143,7 +180,7 @@ class ModelBase(type):
                     f"Storage of type '{type(using)}' does not support format '{format}',"
                     f" supported formats by this storage are '{using.supported_formats}'"
                 )
-            df = using.read_file(cls._meta.table_name, cls.columns, format)
+            df = using.read_file(cls._meta.table_name, cls._meta.fields, format)
         return df
 
     def _get_df(cls, storage: Optional[Storage | StorageGroup] = None):
@@ -153,14 +190,14 @@ class ModelBase(type):
         df = cls._create_df(using=storage)
 
         if cls._meta.auto_select:
-            df = df.select(cls.columns)
+            df = df.select(cls._meta.fields)
 
         columns_from_df = frozenset(df.columns)
-        missing_columns = columns_from_df.difference(cls.columns)
+        missing_columns = columns_from_df.difference(cls._meta.fields)
 
         if missing_columns:
             raise ValueError(
-                f"Dataframe columns do not match. df.columns: {df.columns}, models: {cls.columns}"
+                f"Dataframe columns do not match. df.columns: {df.columns}, models: {cls._meta.fields}"
             )
         return df
 
@@ -175,6 +212,11 @@ class Model(metaclass=ModelBase):
     def __str__(self):
         cls_name = self.__class__.__qualname__
         return f'<{cls_name}: {cls_name} object ({", ".join(self.columns)})>'
+
+    @classmethod
+    @property
+    def fields(cls):
+        return cls._meta.fields
 
     @classmethod
     def from_dict(cls, d: dict):
