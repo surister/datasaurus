@@ -211,7 +211,7 @@ class ModelBase(type):
 class Model(metaclass=ModelBase):
     def __init__(self, **kwargs):
         for column, column_value in kwargs.items():
-            if column not in self.columns:
+            if column not in self.fields:
                 raise ValueError(
                     f"{self} does not have column '{column}', columns are: {self.columns}")
             setattr(self, column, column_value)
@@ -237,7 +237,8 @@ class Model(metaclass=ModelBase):
     def save(cls, to: 'Storage' = None,
              format: DataFormat = None,
              table_name: str = None,
-             environment: str = None, **kwargs):
+             environment: str = None,
+             **kwargs):
 
         storage = cls._get_storage_or_default(to, environment=environment)
         format = cls._get_format_or_default(format)
