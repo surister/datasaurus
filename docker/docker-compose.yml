@@ -1,0 +1,19 @@
+# Database services to be used in development to check
+# connectivity, read and write operations.
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    ports:
+      - 5432:5432
+  mysql:
+    image: mysql
+    environment:
+      - MYSQL_USER=${DATABASE_USER}
+      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DATABASE_PASSWORD}
+    ports:
+      - 3306:3306
