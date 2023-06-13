@@ -4,7 +4,8 @@ from typing import Callable, Optional
 import polars
 from polars import DataFrame
 
-from datasaurus.core.models.exceptions import MissingMeta
+from datasaurus.core.models.exceptions import MissingMeta, FormatNotSupportedByModelError, \
+    FormatNeededError
 from datasaurus.core.models.format import DataFormat
 from datasaurus.core.storage.base import Storage, StorageGroup
 from datasaurus.core.storage.fields import Field
@@ -53,7 +54,7 @@ class Options:
 
     def _populate_from_model(self):
         """
-        Populates Options values from the given model on the __init__, we inherit fields from the parent classes
+        Populates Options values from the given model on the __init__, we also inherit fields from the parent classes
         if they are models.
         """
         # Fields defined in the current model.
@@ -62,7 +63,7 @@ class Options:
         }
 
         # Set fields from base classes.
-        for base in self.model.mro()[:1]:  # We ignore the first one because its itself, otherwise it conflicts.
+        for base in self.model.mro()[:1]:  # We ignore the first one because it is itself, otherwise it conflicts.
             if hasattr(base, '_meta'):
                 for parent_field in base._meta.fields:
                     if parent_field in new_fields:
@@ -127,22 +128,27 @@ class ModelBase(type):
         setattr(cls, '_meta', opts)
         setattr(cls, 'df', lazy_func(cls._get_df))
 
-    def _get_fields(cls):
-        return [str(column) for column in cls.__dict__.values() if
-                isinstance(column, Field)]
-
-    def _get_storage_or_default(cls, storage: Optional[Storage | StorageGroup]) -> Storage:
+    def _get_storage_or_default(cls, storage: Optional[Storage | StorageGroup],
+                                environment: Optional[str] = None) -> Storage:
         """
-        Used to get either the correct Storage instance or the default Meta storage.
+        Resolves the appropriate storage and its environment.
+
+        - If no storage is passed, the default storage will be returned (from meta).
+        - If no environment is passed and either the passed storage or the default storage is a
+        StorageGroup, returns the appropriate as per environment variable.
+
         """
         storage = storage or cls._meta.storage
         if not isinstance(storage, Storage):
             if StorageGroup in storage.__bases__ and len(storage.__bases__) == 1:
-                # If we use Model.save(to=Storage) instead of
-                # Storage.from_env or Storage.environment
-                # directly when passing the storage, we'll receive a StorageGroup instead
-                # of a storage, by default we'll just take it from the environment.
+                # If we use Model.save(to=Storage) instead of Storage.from_env
+                # or Storage.environment directly when passing the storage,
+                # we'd receive a StorageGroup instead of a Storage, by default
+                # return StorageGroup.from_env
                 storage = storage.from_env
+
+        if environment:
+            storage = storage.storage_group.with_env(environment)
         return storage
 
     def _get_format_or_default(cls, format: Optional[DataFormat]):
@@ -162,7 +168,7 @@ class ModelBase(type):
 
         1. Data from constructor - Model.from_dict({'column1': [1,2,3})
         2. Data from calculation - Model.calculate_data()
-        3. Data from Storage - Storage.from_env
+        3. Data from Storage - Storage
         """
         if cls._data_from_cls is not None:
             df = polars.DataFrame(cls._data_from_cls)
@@ -206,7 +212,8 @@ class Model(metaclass=ModelBase):
     def __init__(self, **kwargs):
         for column, column_value in kwargs.items():
             if column not in self.columns:
-                raise ValueError(f"{self} does not have column '{column}', columns are: {self.columns}")
+                raise ValueError(
+                    f"{self} does not have column '{column}', columns are: {self.columns}")
             setattr(self, column, column_value)
 
     def __str__(self):
@@ -227,20 +234,26 @@ class Model(metaclass=ModelBase):
         raise NotImplementedError()
 
     @classmethod
-    def save(cls, to: 'Storage' = None, format: DataFormat = None, **kwargs):
-        storage = cls._get_storage_or_default(to)
+    def save(cls, to: 'Storage' = None,
+             format: DataFormat = None,
+             table_name: str = None,
+             environment: str = None, **kwargs):
+
+        storage = cls._get_storage_or_default(to, environment=environment)
         format = cls._get_format_or_default(format)
+        table_name = table_name or cls._meta.table_name
 
         if format and not storage.supports_format(format):
-            raise ValueError(
+            raise FormatNotSupportedByModelError(
                 f"Storage of type '{type(storage)}' does not support format '{format}',"
                 f" supported formats by this storage are '{storage.supported_formats}'"
             )
 
         if storage.needs_format and not format:
-            raise Exception(
-                f"Cannot save Dataframe because storage of type '{type(storage)}' needs a format"
+            raise FormatNeededError(
+                f"Cannot save Dataframe because storage of type '{type(storage)}'"
+                " needs a format and it was not provided"
             )
 
         df = cls._get_df()
-        storage.write_file(df, cls._meta.table_name, format=format, **kwargs)
+        storage.write_file(df, table_name, format=format, **kwargs)
