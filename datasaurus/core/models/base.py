@@ -5,7 +5,7 @@ import polars
 from polars import DataFrame
 
 from datasaurus.core.models.exceptions import MissingMeta, FormatNotSupportedByModelError, \
-    FormatNeededError
+    FormatNeededError, FieldNotExistsError
 from datasaurus.core.models.format import DataFormat
 from datasaurus.core.storage.base import Storage, StorageGroup
 from datasaurus.core.storage.fields import Field
@@ -212,13 +212,13 @@ class Model(metaclass=ModelBase):
     def __init__(self, **kwargs):
         for column, column_value in kwargs.items():
             if column not in self.fields:
-                raise ValueError(
-                    f"{self} does not have column '{column}', columns are: {self.columns}")
+                raise FieldNotExistsError(
+                    f"{self} does not have column '{column}', columns are: {self.fields}")
             setattr(self, column, column_value)
 
     def __str__(self):
         cls_name = self.__class__.__qualname__
-        return f'<{cls_name}: {cls_name} object ({", ".join(self.columns)})>'
+        return f'<{cls_name}: {cls_name} object ({", ".join(self.fields)})>'
 
     @classmethod
     @property
