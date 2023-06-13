@@ -31,6 +31,8 @@ class Storage(ABC):
     def __init__(self, name: str, environment: ENVIRONMENT):
         self.environment = environment
         self.name = name
+        # Reference to the storage group it belongs
+        self.storage_group = None
 
     def get_uri(self):
         ...
@@ -51,8 +53,10 @@ class Storage(ABC):
         return format in self.supported_formats
 
     def __set_name__(self, owner, name):
+        self.storage_group = owner
         if not isinstance(owner(), StorageGroup):
-            logging.warning('Cannot register ')  # Todo better warning message
+            raise Exception('Cannot register') # Todo refactor exception
+
         if self.environment == AUTO_RESOLVE:
             self.environment = name
 
@@ -70,6 +74,13 @@ class StorageGroup:
             for element in cls.__dict__.values()
             if isinstance(element, Storage)
         ]
+
+    @classmethod
+    def with_env(cls, environment):
+        if environment not in cls.environments:
+            raise Exception(
+                f"Storage Group '{cls}' does not have environment {environment}, declared enviroinmentes are : {cls.environments}")
+        return getattr(cls, environment)
 
     @classmethod
     @property
