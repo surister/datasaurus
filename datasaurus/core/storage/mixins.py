@@ -54,7 +54,6 @@ class LocalStorageOperationsMixin:
         return pathlib.Path(self.get_uri()).exists()
 
     def write_file(self, data: pl.DataFrame, file_name: str, format: FileFormat, **kwargs):
-        file_name = kwargs.pop('overriden_filename', None) or file_name
         full_path = f'{self.path}{file_name}.{format.name}' if format else file_name
         _write_func = getattr(data, f'write_{format.name}')
         return _write_func(full_path, **kwargs)
