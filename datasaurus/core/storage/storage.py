@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 
 from datasaurus.core.storage.base import Storage, AUTO_RESOLVE
 from datasaurus.core.storage.mixins import LocalStorageOperationsMixin, SQLStorageOperationsMixin
@@ -55,6 +56,38 @@ class SqliteStorage(SQLStorageOperationsMixin, Storage):
 
     def get_uri(self) -> str:
         return Uri(scheme='sqlite', path=self.path).get_uri()
+
+
+class MysqlStorage(SQLStorageOperationsMixin, Storage):
+    def __init__(self,
+                 username: str,
+                 password: str,
+                 host: str,
+                 database: str,
+                 port: str = '3306',
+                 storage_name: str = '',
+                 environment: str = AUTO_RESOLVE):
+        super().__init__(storage_name, environment)
+
+        self.username = username
+        self.password = password
+        self.host = host
+        self.port = port
+        self.database = database
+
+        if self.host == 'localhost':
+            logging.warning("By using localhost as host, mysql will try to use UNIX sockets, "
+                            "make sure your application has access (you might get <Can't connect"
+                            " to local MySQL server through socket> errors), if you want to use"
+                            " TCP instead use 127.0.0.1, the ip of the machine or the correct hostname")
+
+    def get_uri(self):
+        return Uri(scheme='mysql+mysqldb',
+                   user=self.username,
+                   password=self.password,
+                   host=self.host,
+                   port=self.port,
+                   path=self.database).get_uri()
 
 
 class PostgresStorage(SQLStorageOperationsMixin, Storage):
