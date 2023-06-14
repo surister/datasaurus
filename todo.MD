@@ -17,6 +17,7 @@
 - [x] Allow for inheritance where fields and Meta options are gotten from bases.
 - [x] Improve Model.save api: allow always for table_name override.
 - [x] Improve Model.save api: allow always for environment (as string) override.
+- [x] Add mysql support
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
@@ -27,7 +28,7 @@
 
 # Storages + IO
 - [ ] Make read/write operations to respect Fields options, like 'unique', 'column_name'
-- [ ] Make write operations respect __overwrite__, it should be True by default.
+- [ ] Add save modes such as: append, overwrite, 'delta'?
 - [ ] Change string SQL queries to something that build SQL queries safely.
 - [ ] Make tests where we do all possible IO combinations with all mixin implementations
 - [ ] Implement ndjson format
