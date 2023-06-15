@@ -22,7 +22,7 @@ class Uri:
         password = ':' + self.password if self.password else ''
         host = '@' + self.host if self.host and self.user else ''
         port = ':' + self.port if self.port else ''
-        if self.path.startswith('/'):
+        if self.path.startswith('/') and scheme:
             self.path = self.path.replace('/', '//', 1)
 
         if not self.path.startswith('/') and self.port and self.path:
@@ -39,8 +39,6 @@ class Uri:
 
 
 class LocalStorage(LocalStorageOperationsMixin, Storage):
-    __slots__ = 'path',
-
     def __init__(self, path: str, name: str = '', environment: str = AUTO_RESOLVE):
         super().__init__(name, environment)
         self.path = path
@@ -56,6 +54,38 @@ class SqliteStorage(SQLStorageOperationsMixin, Storage):
 
     def get_uri(self) -> str:
         return Uri(scheme='sqlite', path=self.path).get_uri()
+
+
+class MariadbStorage(SQLStorageOperationsMixin, Storage):
+    def __init__(self,
+                 username: str,
+                 password: str,
+                 host: str,
+                 database: str,
+                 port: str = '3306',
+                 storage_name: str = '',
+                 environment: str = AUTO_RESOLVE):
+        super().__init__(storage_name, environment)
+
+        self.username = username
+        self.password = password
+        self.host = host
+        self.port = port
+        self.database = database
+
+        if self.host == 'localhost':
+            logging.warning("By using localhost as host, mysql will try to use UNIX sockets, "
+                            "make sure your application has access (you might get <Can't connect"
+                            " to local MySQL server through socket> errors), if you want to use"
+                            " TCP instead use 127.0.0.1, the ip of the machine or the correct hostname")
+
+    def get_uri(self):
+        return Uri(scheme='mysql',
+                   user=self.username,
+                   password=self.password,
+                   host=self.host,
+                   port=self.port,
+                   path=self.database).get_uri()
 
 
 class MysqlStorage(SQLStorageOperationsMixin, Storage):
@@ -82,7 +112,7 @@ class MysqlStorage(SQLStorageOperationsMixin, Storage):
                             " TCP instead use 127.0.0.1, the ip of the machine or the correct hostname")
 
     def get_uri(self):
-        return Uri(scheme='mysql+mysqldb',
+        return Uri(scheme='mysql',
                    user=self.username,
                    password=self.password,
                    host=self.host,
@@ -91,6 +121,8 @@ class MysqlStorage(SQLStorageOperationsMixin, Storage):
 
 
 class PostgresStorage(SQLStorageOperationsMixin, Storage):
+    EXISTS_QUERY = 'SELECT * FROM "{table_name}" LIMIT 1'
+
     def __init__(self,
                  username: str,
                  password: str,
