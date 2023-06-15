@@ -32,6 +32,8 @@
 - [ ] Change string SQL queries to something that build SQL queries safely.
 - [ ] Make tests where we do all possible IO combinations with all mixin implementations
 - [ ] Implement ndjson format
+- [ ] Investigate and chose the default mysql/mariadb driver https://docs.sqlalchemy.org/en/20/dialects/mysql.html (mysqlclient can be used)
+to read but not to write.
 
 # General Stuff
 - [ ] Create custom exceptions, we are currently using Exception and ValueError everywhere. 

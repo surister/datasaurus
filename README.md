@@ -15,7 +15,7 @@ data pipelines, ETLs or data manipulation programs.
 - Sqlite ✅
 - PostgresSQL ✅
 - MySQL ✅
-- Mariadb ⭕
+- Mariadb ✅
 - Local Storage ✅
 - Azure blob storage ⭕
 - AWS S3 ⭕
