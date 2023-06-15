@@ -1,9 +1,17 @@
 [tool.poetry]
 name = "datasaurus"
-version = "0.1.0"
-description = ""
+version = "0.0.1dev1"
+description = "Data Engineering framework based on Polars.rs"
+repository = "https://www.github.com/surister/datasaurus"
 authors = ["surister <surister98@gmail.com>"]
 readme = "README.md"
+license = "MIT"
+keywords = ["python3", "data", "polars", "dataframes", "framework", "OOP"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Topic :: Software Development :: Libraries"
+]
+
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -14,14 +22,25 @@ adbc-driver-sqlite = "^0.4.0"
 pandas = "^2.0.2"
 sqlalchemy = "^2.0.15"
 
+
 [tool.poetry.group.azure.dependencies]
 azure-storage-blob = "^12.16.0"
 azure-identity = "^1.13.0"
 
-
-
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
+
+[tool.poetry.group.test.dependencies]
+factory-boy = "^3.2.1"
+
+[tool.poetry.group.mysql.dependencies]
+mysql-connector-python = "^8.0.33"
+mysqlclient = "^2.1.1"
+pymysql = "^1.0.3"
+
+
+[tool.poetry.group.postgres.dependencies]
+psycopg2 = "^2.9.6"
 
 [build-system]
 requires = ["poetry-core"]
