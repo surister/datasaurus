@@ -6,6 +6,7 @@ from datasaurus.core.storage.storage import Uri
 @pytest.mark.parametrize(
     'input, expected',
     [
+        (Uri(path='/tmp'), '/tmp'),
         (Uri(scheme='sqlite', path='home/test'), 'sqlite://home/test'),
         (Uri(scheme='sqlite', path='/home/test'), 'sqlite:////home/test'),
         #                                                ^^^^^
