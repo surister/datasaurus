@@ -1,11 +1,10 @@
-import logging
 import os
 from abc import abstractmethod, ABC
 from typing import Union
 
 import polars
 
-from datasaurus.core.models.format import DataFormat, FormatNotSet
+from datasaurus.core.storage.format import DataFormat, FormatNotSet
 
 
 class _auto_resolve:

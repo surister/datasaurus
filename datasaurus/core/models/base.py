@@ -6,7 +6,7 @@ from polars import DataFrame
 
 from datasaurus.core.models.exceptions import MissingMeta, FormatNotSupportedByModelError, \
     FormatNeededError, FieldNotExistsError
-from datasaurus.core.models.format import DataFormat
+from datasaurus.core.storage.format import DataFormat
 from datasaurus.core.storage.base import Storage, StorageGroup
 from datasaurus.core.storage.fields import Field
 
