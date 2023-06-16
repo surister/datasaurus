@@ -8,7 +8,7 @@ from datasaurus.core.models.exceptions import MissingMeta, FormatNotSupportedByM
     FormatNeededError, FieldNotExistsError
 from datasaurus.core.storage.format import DataFormat
 from datasaurus.core.storage.base import Storage, StorageGroup
-from datasaurus.core.storage.fields import Field
+from datasaurus.core.models.fields import Field, Fields
 
 
 class lazy_func:
@@ -46,8 +46,7 @@ class Options:
         self.format = None
 
         # Options from model
-        self.fields_dict = {}
-        self.fields = []
+        self.fields = Fields()
 
         self._populate_from_meta()
         self._populate_from_model()
@@ -58,9 +57,12 @@ class Options:
         if they are models.
         """
         # Fields defined in the current model.
-        new_fields = {
-            field_name: field for field_name, field in self.model.__dict__.items() if isinstance(field, Field)
-        }
+        new_fields = [
+            field for field in
+            self.model.__dict__.values() if isinstance(field, Field)
+        ]
+
+        new_fields = Fields(new_fields)
 
         # Set fields from base classes.
         for base in self.model.mro()[:1]:  # We ignore the first one because it is itself, otherwise it conflicts.
@@ -71,10 +73,9 @@ class Options:
                             f"Field '{parent_field}' from {self.model} clashes with parent model {base}"
                         )
 
-                new_fields.update(base._meta.fields_dict)
+                new_fields.extend(base._meta.fields)
 
-        self.fields = list(new_fields.keys())
-        self.fields_dict = new_fields
+        self.fields = new_fields
 
     def _populate_from_meta(self):
         """
@@ -186,7 +187,7 @@ class ModelBase(type):
                     f"Storage of type '{type(using)}' does not support format '{format}',"
                     f" supported formats by this storage are '{using.supported_formats}'"
                 )
-            df = using.read_file(cls._meta.table_name, cls._meta.fields, format)
+            df = using.read_file(cls._meta.table_name, cls._meta.fields.get_df_columns(), format)
         return df
 
     def _get_df(cls, storage: Optional[Storage | StorageGroup] = None):
@@ -209,9 +210,12 @@ class ModelBase(type):
 
 
 class Model(metaclass=ModelBase):
+    _meta: Options  # Type hint so autocompletion is helpful!
+
     def __init__(self, **kwargs):
         for column, column_value in kwargs.items():
-            if column not in self.fields:
+
+            if column not in self._meta.fields.get_model_columns():
                 raise FieldNotExistsError(
                     f"{self} does not have column '{column}', columns are: {self.fields}")
             setattr(self, column, column_value)
@@ -223,7 +227,7 @@ class Model(metaclass=ModelBase):
     @classmethod
     @property
     def fields(cls):
-        return cls._meta.fields
+        return cls._meta.fields.get_model_columns()
 
     @classmethod
     def from_dict(cls, d: dict):
