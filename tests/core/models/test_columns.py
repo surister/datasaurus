@@ -1,10 +1,6 @@
 from datasaurus.core.models.fields import Field, Fields
+
 import polars as pl
-
-
-# TODO do this missing tests
-def test_column():
-    column = Field()
 
 
 def test_column_as_descriptors():
@@ -50,5 +46,38 @@ def test_column_as_descriptors():
     assert dummy.col2 == col_val
 
 
+def test_column_name():
+    col = Field()
+    col.__set_name__(None, 'col')
+
+    col_1 = Field(column_name='column_name')
+    col_1.__set_name__(None, 'col_1')
+
+    assert col.name == 'col'
+    assert col_1.name == 'col_1'
+    assert col.get_column_name() == 'col'
+    assert col_1.get_column_name() == 'column_name'
+
+
 def test_columns():
-    columns = Fields()
+    col_1 = Field()
+    col_2 = Field(column_name='col_new')
+
+    col_1.__set_name__(None, 'col_1')
+    col_2.__set_name__(None, 'col_2')
+
+    columns = Fields([col_1, col_2])
+
+    assert col_1 in columns
+    assert len(columns) == 2
+    assert columns[0] == col_1
+
+    col_3 = Field()
+    col_3.__set_name__(None, 'col_3')
+
+    columns_2 = Fields([col_3, ])
+    columns.extend(columns_2)
+
+    assert len(columns) == 3
+    assert columns.get_model_columns() == ['col_1', 'col_2', 'col_3']
+    assert columns.get_df_columns() == ['col_1', 'col_new', 'col_3']
