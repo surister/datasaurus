@@ -17,13 +17,16 @@
 - [x] Improve Model.save api: allow always for table_name override.
 - [x] Improve Model.save api: allow always for environment (as string) override.
 - [x] Add mysql support
+- [x] Add column_name option to Columns
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
 
-# Fields
-- [ ] Add column_name option to Fields
+# Columns
 - [ ] Add more fields types
+- [ ] Add more options to Columns depending on the column Type, like 'unique',  'column_name'
+... etc
+
 
 # Storages + IO
 - [ ] Make read/write operations to respect Fields options, like 'unique', 'column_name'
