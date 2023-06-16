@@ -7,7 +7,7 @@ class Field:
         self._value = None
 
     def __set_name__(self, owner, name):
-        self.name = self.column_name or name
+        self.name = name
 
     def __set__(self, instance, value):
         self._value = value
@@ -15,11 +15,50 @@ class Field:
     def __get__(self, instance, owner):
         if instance is None:
             import polars
-            return polars.col(self.name)
+            return polars.col(self.get_column_name())
         return self._value
+
+    def get_column_name(self):
+        return self.column_name or self.name
 
     def __str__(self):
         return self.name
+
+    def __repr__(self):
+        return f'{self.__class__.__qualname__}<{self.name}>'
+
+
+class Fields:
+    """Helps to control a group of fields, 1 Fields per Model obj"""
+
+    def __init__(self, initial_fields: list[Field] = None):
+        self._fields = initial_fields or []
+
+    def __getitem__(self, item):
+        return self._fields[item]
+
+    def __iter__(self):
+        return iter(self._fields)
+
+    def __str__(self):
+        return str(self._fields)
+
+    def __len__(self):
+        return len(self._fields)
+
+    def __contains__(self, item):
+        return item.name in self.get_model_columns()
+
+    def extend(self, fields: 'Fields'):
+        self._fields.extend(fields._fields)
+
+    def get_df_columns(self):
+        """Get a list of the columns that will be used on the df write/read operations"""
+        return [field.get_column_name() for field in self._fields]
+
+    def get_model_columns(self):
+        """Get the list of columns as defined in the Model"""
+        return [field.name for field in self._fields]
 
 
 class StringField(Field):
