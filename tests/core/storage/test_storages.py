@@ -6,6 +6,7 @@ from datasaurus.core.storage.storage import PostgresStorage, MysqlStorage, Maria
     SqliteStorage
 
 
+@pytest.mark.need_docker_setup
 @pytest.mark.parametrize('storage, format, storage_name', [
     (LocalStorage(path='/tmp'), FileFormat.CSV, LocalStorage),
     (LocalStorage(path='/tmp'), FileFormat.JSON, LocalStorage),
