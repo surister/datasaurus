@@ -1,7 +1,7 @@
 import pytest
 
 from datasaurus.core import models
-from datasaurus.core.storage.fields import StringField
+from datasaurus.core.models.fields import StringField
 
 
 @pytest.fixture
