@@ -179,6 +179,9 @@ class ModelBase(type):
         elif cls._meta.recalculate:
             df = cls.calculate_data(cls)
 
+            if not isinstance(df, DataFrame):
+                raise ValueError(f'Function calculate_data has to return a polars Dataframe, not a {type(df)}')
+
         else:
             using = cls._get_storage_or_default(using)
             format = cls._meta.format
@@ -200,8 +203,8 @@ class ModelBase(type):
             df = df.select(cls._meta.fields)
 
         columns_from_df = frozenset(df.columns)
-        missing_columns = columns_from_df.difference(cls._meta.fields)
-
+        missing_columns = columns_from_df.difference(cls._meta.fields.get_df_columns())
+        
         if missing_columns:
             raise ValueError(
                 f"Dataframe columns do not match. df.columns: {df.columns}, models: {cls._meta.fields}"
@@ -234,7 +237,7 @@ class Model(metaclass=ModelBase):
         setattr(cls, '_data_from_cls', d)
         return cls
 
-    def calculate_data(self):
+    def calculate_data(self) -> 'polars.DataFrame':
         raise NotImplementedError()
 
     @classmethod
