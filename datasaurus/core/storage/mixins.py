@@ -11,7 +11,7 @@ class StorageOperationMixinBase(ABC):
     """Simple abc to stop me from messing it up when creating new Mixins"""
 
     @abstractmethod
-    def read_file(self, file_name, columns): ...
+    def read_file(self, file_name, columns, format): ...
 
     @abstractmethod
     def write_file(self, df, file_name, format, **kwargs): ...
@@ -30,7 +30,7 @@ def list_to_sql_columns(l: list[str]) -> str:
 class SQLStorageOperationsMixin(StorageOperationMixinBase):
     EXISTS_QUERY = 'SELECT * FROM `{table_name}` LIMIT 1'
 
-    def read_file(self, file_name: str, columns: list):
+    def read_file(self, file_name: str, columns: list, format=None):
         datasaurus_logger.debug(f'Trying to read {file_name}')
         query = f'SELECT {list_to_sql_columns(columns)} FROM "{file_name}"'
         datasaurus_logger.debug(f'query: {query}')
