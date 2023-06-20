@@ -129,7 +129,7 @@ class BooleanColumn(Field):
     default_dtype = polars.Boolean
 
 
-class StringField(Field):
+class StringColumn(Field):
     supported_dtypes = [polars.Utf8]
     default_dtype = polars.Utf8
 
