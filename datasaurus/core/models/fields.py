@@ -134,7 +134,7 @@ class StringColumn(Field):
     default_dtype = polars.Utf8
 
 
-class IntegerField(Field):
+class IntegerColumn(Field):
     supported_dtypes = [polars.UInt8, polars.UInt16, polars.UInt32, polars.UInt64, polars.Int8,
                         polars.Int16, polars.Int32, polars.Int64]
     default_dtype = polars.Int32

@@ -1,7 +1,7 @@
 import polars
 import pytest
 
-from datasaurus.core.models.fields import Field, Fields, StringField, IntegerField, DateColumn
+from datasaurus.core.models.fields import Field, Fields, StringColumn, IntegerColumn, DateColumn
 
 import polars as pl
 
@@ -66,10 +66,10 @@ def test_column_name():
 
 
 def test_column_dtype():
-    stringcolumn = StringField
+    stringcolumn = StringColumn
     stringcolumn._override_polars_col = True
 
-    intcolumn = IntegerField
+    intcolumn = IntegerColumn
     intcolumn._override_polars_col = True
 
     datecolumn = DateColumn
