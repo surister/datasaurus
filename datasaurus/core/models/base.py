@@ -103,7 +103,6 @@ class Options:
 class ModelBase(type):
     df: DataFrame
     _meta: Options
-    # This is where the data from cls.from_dict will be stored temporarily
     _data_from_cls: Optional[dict] = None
 
     def __new__(cls, name, bases, attrs, **kwargs):
@@ -177,39 +176,53 @@ class ModelBase(type):
             cls._data_from_cls = None
 
         elif cls._meta.recalculate:
-            df = cls.calculate_data(cls)
+            try:
+                df = cls.calculate_data(cls)
+
+            except NotImplementedError as e:
+                raise ValueError(
+                    'Cannot generate dataframe, do you have recalculate=True in your model while'
+                    ' calculate_data is not defined in the model? If you are trying to create the'
+                    ' dataframe from existing data, set recalculate=False (default)') from e
 
             if not isinstance(df, DataFrame):
-                raise ValueError(f'Function calculate_data has to return a polars Dataframe, not a {type(df)}')
+                raise ValueError(
+                    f'Function calculate_data has to return a polars Dataframe, not a {type(df)}')
 
         else:
             using = cls._get_storage_or_default(using)
             format = cls._meta.format
+
             if format and not using.supports_format(format):
                 raise ValueError(
                     f"Storage of type '{type(using)}' does not support format '{format}',"
                     f" supported formats by this storage are '{using.supported_formats}'"
                 )
+
             df = using.read_file(cls._meta.table_name, cls._meta.fields.get_df_columns(), format)
+
         return df
 
     def _get_df(cls, storage: Optional[Storage | StorageGroup] = None):
         """
-        Applies schema validation, data validations and options to the newly created dataframe.
+        Applies schema validation (dtypes), data validations and options to the newly created dataframe.
         """
         df = cls._create_df(using=storage)
 
-        if cls._meta.auto_select:
-            df = df.select(cls._meta.fields)
-
         columns_from_df = frozenset(df.columns)
         missing_columns = columns_from_df.difference(cls._meta.fields.get_df_columns())
-        
+
         if missing_columns:
             raise ValueError(
-                f"Dataframe columns do not match. df.columns: {df.columns}, models: {cls._meta.fields}"
+                f"Dataframe columns do not match. df.columns: {df.columns},"
+                f" models: {cls._meta.fields.get_df_columns()}"
             )
-        return df
+
+        if cls._meta.auto_select:
+            df = df.select(cls._meta.fields.get_df_columns())
+
+        columns_with_dtypes = cls._meta.fields.get_df_columns_polars(df.schema)
+        return df.with_columns(columns_with_dtypes)
 
 
 class Model(metaclass=ModelBase):
@@ -241,7 +254,8 @@ class Model(metaclass=ModelBase):
         raise NotImplementedError()
 
     @classmethod
-    def save(cls, to: 'Storage' = None,
+    def save(cls,
+             to: 'Storage' = None,
              format: DataFormat = None,
              table_name: str = None,
              environment: str = None,
