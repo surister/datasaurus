@@ -124,14 +124,25 @@ class Fields(Collection):
         return [field.name for field in self._fields]
 
 
+class BooleanColumn(Field):
+    supported_dtypes = [polars.Boolean]
+    default_dtype = polars.Boolean
+
+
 class StringField(Field):
     supported_dtypes = [polars.Utf8]
     default_dtype = polars.Utf8
 
 
 class IntegerField(Field):
-    supported_dtypes = [polars.UInt8, polars.UInt16, polars.UInt32, polars.UInt64]
-    default_dtype = polars.UInt32
+    supported_dtypes = [polars.UInt8, polars.UInt16, polars.UInt32, polars.UInt64, polars.Int8,
+                        polars.Int16, polars.Int32, polars.Int64]
+    default_dtype = polars.Int32
+
+
+class FloatColumn(Field):
+    supported_dtypes = [polars.Float32, polars.Float64, polars.Decimal]
+    default_dtype = polars.Float32
 
 
 class DateTimeColumn(Field):
