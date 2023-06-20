@@ -172,7 +172,7 @@ class ModelBase(type):
         3. Data from Storage - Storage
         """
         if cls._data_from_cls is not None:
-            df = polars.DataFrame(cls._data_from_cls)
+            df = polars.DataFrame(cls._data_from_cls, schema=cls._schema)
             del cls._data_from_cls
             cls._data_from_cls = None
 
@@ -247,8 +247,9 @@ class Model(metaclass=ModelBase):
         return cls._meta.columns.get_model_columns()
 
     @classmethod
-    def from_dict(cls, d: dict):
+    def from_dict(cls, d: dict, schema):
         setattr(cls, '_data_from_cls', d)
+        setattr(cls, '_schema', schema)
         return cls
 
     def calculate_data(self) -> 'polars.DataFrame':
