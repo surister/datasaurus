@@ -6,7 +6,7 @@ import polars
 ColumnName = str
 
 
-class Field:
+class Column:
     _override_polars_col = False  # Set only to true in unit tests.
 
     default_dtype = polars.Utf8
@@ -14,12 +14,12 @@ class Field:
     cast_map = {}
 
     def __init__(self,
-                 column_name: Optional[str] = None,
+                 name: Optional[str] = None,
                  enforce_dtype=True,
                  dtype=None,
                  *args,
                  **kwargs):
-        self.column_name = column_name
+        self.column_name = name
         self.enforce_dtype = enforce_dtype
         self.dtype = dtype
 
@@ -82,33 +82,33 @@ class Field:
                f' dtype={self.dtype or self.default_dtype}>'
 
 
-class Fields(Collection):
-    """Helps to control a group of fields, 1 Fields per Model obj"""
+class Columns(Collection):
+    """Class that represents a group of Columns. One columns object per Model"""
 
-    def __init__(self, initial_fields: list[Field] = None):
-        self._fields = initial_fields or []
+    def __init__(self, initial_columns: list[Column] = None):
+        self._columns = initial_columns or []
 
     def __getitem__(self, item):
-        return self._fields[item]
+        return self._columns[item]
 
     def __iter__(self):
-        return iter(self._fields)
+        return iter(self._columns)
 
     def __str__(self):
-        return str(self._fields)
+        return str(self._columns)
 
     def __len__(self):
-        return len(self._fields)
+        return len(self._columns)
 
     def __contains__(self, item):
         return item.name in self.get_model_columns()
 
-    def extend(self, other: 'Fields') -> None:
-        self._fields.extend(other._fields)
+    def extend(self, other: 'Columns') -> None:
+        self._columns.extend(other._columns)
 
     def get_df_columns(self) -> list[str]:
         """Get a list of the columns that will be used on the df write/read operations"""
-        return [field.get_column_name() for field in self._fields]
+        return [column.get_column_name() for column in self._columns]
 
     def get_df_columns_polars(self, current_dtypes: dict[ColumnName: polars.DataType]) -> list[
         polars.Expr]:
@@ -116,36 +116,36 @@ class Fields(Collection):
         return [
             column.get_col_with_dtype(current_dtypes[column.get_column_name()])
             if column.enforce_dtype else column.get_column_name()
-            for column in self._fields
+            for column in self._columns
         ]
 
     def get_model_columns(self) -> list:
         """Get the list of columns as defined in the Model"""
-        return [field.name for field in self._fields]
+        return [column.name for column in self._columns]
 
 
-class BooleanColumn(Field):
+class BooleanColumn(Column):
     supported_dtypes = [polars.Boolean]
     default_dtype = polars.Boolean
 
 
-class StringColumn(Field):
+class StringColumn(Column):
     supported_dtypes = [polars.Utf8]
     default_dtype = polars.Utf8
 
 
-class IntegerColumn(Field):
+class IntegerColumn(Column):
     supported_dtypes = [polars.UInt8, polars.UInt16, polars.UInt32, polars.UInt64, polars.Int8,
                         polars.Int16, polars.Int32, polars.Int64]
     default_dtype = polars.Int32
 
 
-class FloatColumn(Field):
+class FloatColumn(Column):
     supported_dtypes = [polars.Float32, polars.Float64, polars.Decimal]
     default_dtype = polars.Float32
 
 
-class DateTimeColumn(Field):
+class DateTimeColumn(Column):
     supported_dtypes = [polars.Datetime, ]
     default_dtype = polars.Datetime
 
@@ -159,7 +159,7 @@ class DateTimeColumn(Field):
         }
 
 
-class DateColumn(Field):
+class DateColumn(Column):
     supported_dtypes = [polars.Date]
     default_dtype = polars.Date
 

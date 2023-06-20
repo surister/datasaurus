@@ -1,7 +1,7 @@
 import polars
 import pytest
 
-from datasaurus.core.models.fields import Field, Fields, StringColumn, IntegerColumn, DateColumn
+from datasaurus.core.models.columns import Column, Columns, StringColumn, IntegerColumn, DateColumn
 
 import polars as pl
 
@@ -15,8 +15,8 @@ def test_column_as_descriptors():
     other_col_name = 'other_col_name'
 
     class Dummy:
-        col = Field()
-        col2 = Field(column_name=other_col_name)
+        col = Column()
+        col2 = Column(name=other_col_name)
 
     dummy = Dummy()
 
@@ -53,10 +53,10 @@ def test_column_name():
     """Tests that we get the correct column name, which might differ if we pass the 'column_name'
     param
     """
-    col = Field()
+    col = Column()
     col.__set_name__(None, 'col')
 
-    col_1 = Field(column_name='column_name')
+    col_1 = Column(name='column_name')
     col_1.__set_name__(None, 'col_1')
 
     assert col.name == 'col'
@@ -65,7 +65,7 @@ def test_column_name():
     assert col_1.get_column_name() == 'column_name'
 
 
-def test_column_dtype():
+def test_column_dtype_casts():
     stringcolumn = StringColumn
     stringcolumn._override_polars_col = True
 
@@ -82,12 +82,13 @@ def test_column_dtype():
         col4 = intcolumn(dtype=polars.UInt64)
         col5 = datecolumn()
 
-    # Sucks to be comparing Strings vs actual objects, but as 0.17.15 we cannot compare polars.Exp
-    # as they are lazy Objects, check polars.Exp.__bool__ for more details.
+    # Sucks to be comparing Strings vs actual objects, but as polars==0.17.15
+    # we cannot compare polars.Exp as they are lazy Objects,
+    # check polars.Exp.__bool__ for more details.
     assert str(Dummy.col.get_col_with_dtype(polars.Utf8)) == 'col("col")'
     assert str(Dummy.col.get_col_with_dtype(polars.Int8)) == 'col("col").strict_cast(Utf8)'
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError):
         Dummy.col3.get_col_with_dtype(polars.Boolean)
 
     assert str(Dummy.col4.get_col_with_dtype(polars.UInt8)) == 'col("col4").strict_cast(UInt64)'
@@ -97,22 +98,22 @@ def test_column_dtype():
 
 def test_columns():
     """Tests the container class Columns"""
-    col_1 = Field()
-    col_2 = Field(column_name='col_new')
+    col_1 = Column()
+    col_2 = Column(name='col_new')
 
     col_1.__set_name__(None, 'col_1')
     col_2.__set_name__(None, 'col_2')
 
-    columns = Fields([col_1, col_2])
+    columns = Columns([col_1, col_2])
 
     assert col_1 in columns
     assert len(columns) == 2
     assert columns[0] == col_1
 
-    col_3 = Field()
+    col_3 = Column()
     col_3.__set_name__(None, 'col_3')
 
-    columns_2 = Fields([col_3, ])
+    columns_2 = Columns([col_3, ])
     columns.extend(columns_2)
 
     assert len(columns) == 3

@@ -1,8 +1,8 @@
 import pytest
 
 from datasaurus.core import models
-from datasaurus.core.models.exceptions import MissingMeta, FieldNotExistsError
-from datasaurus.core.models.fields import Field, Fields
+from datasaurus.core.models.exceptions import MissingMeta, ColumnNotExistsError
+from datasaurus.core.models.columns import Column, Columns
 
 
 def test_model_has_to_have_meta_class():
@@ -19,52 +19,52 @@ def test_model_can_be_instantiated():
     SomeModel()
 
 
-def test_model_fields_can_be_used(dummy_model_class):
-    field_value = 'text'
+def test_model_columns_can_be_used(dummy_model_class):
+    column_value = 'text'
 
-    model = dummy_model_class(field=field_value)
+    model = dummy_model_class(column=column_value)
 
-    assert model.field == field_value
+    assert model.column == column_value
 
 
 def test_model_column_with_column_name_correctly_raises_when_set():
     class DummyModel(models.Model):
-        field = Field(column_name='different_column_name')
+        column = Column(name='different_column_name')
 
         class Meta: pass
 
     value = 1
 
-    with pytest.raises(FieldNotExistsError):
+    with pytest.raises(ColumnNotExistsError):
         DummyModel(different_column_name=value)
 
 
-def test_model_fields_raises_if_not_exists(dummy_model_class):
-    with pytest.raises(FieldNotExistsError):
-        dummy_model_class(field_that_does_not_exist='text')
+def test_model_column_raises_if_not_exists(dummy_model_class):
+    with pytest.raises(ColumnNotExistsError):
+        dummy_model_class(column_that_does_not_exists='text')
 
 
-def test_model_has_correct_fields():
+def test_model_has_correct_columns():
     class DummyModel(models.Model):
-        field = Field(column_name='different_column_name')
-        field2 = Field()
+        column = Column(name='different_column_name')
+        column2 = Column()
 
         class Meta: pass
 
-    assert len(DummyModel.fields) == 2
-    assert 'field' in DummyModel.fields and 'field2' in DummyModel.fields
+    assert len(DummyModel.columns) == 2
+    assert 'column' in DummyModel.columns and 'column2' in DummyModel.columns
 
 
-def test_model_has_correct_meta_fields():
+def test_model_has_correct_meta_columns():
     class DummyModel(models.Model):
-        field = Field(column_name='different_column_name')
-        field2 = Field()
+        column = Column(name='different_column_name')
+        column2 = Column()
 
         class Meta: pass
 
-    fields = DummyModel._meta.fields
+    columns = DummyModel._meta.columns
 
-    assert isinstance(fields, Fields)
-    assert len(fields) == 2
-    assert fields[0].column_name == 'different_column_name'
+    assert isinstance(columns, Columns)
+    assert len(columns) == 2
+    assert columns[0].column_name == 'different_column_name'
 

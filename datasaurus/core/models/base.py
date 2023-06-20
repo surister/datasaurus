@@ -5,10 +5,10 @@ import polars
 from polars import DataFrame
 
 from datasaurus.core.models.exceptions import MissingMeta, FormatNotSupportedByModelError, \
-    FormatNeededError, FieldNotExistsError
+    FormatNeededError, ColumnNotExistsError
 from datasaurus.core.storage.format import DataFormat
 from datasaurus.core.storage.base import Storage, StorageGroup
-from datasaurus.core.models.fields import Field, Fields
+from datasaurus.core.models.columns import Column, Columns
 
 
 class lazy_func:
@@ -31,7 +31,7 @@ class Options:
         'auto_select',
         'recalculate',
         'format',
-        'fields',
+        'columns',
     ]
 
     def __init__(self, meta, model):
@@ -46,36 +46,37 @@ class Options:
         self.format = None
 
         # Options from model
-        self.fields = Fields()
+        self.columns = Columns()
 
         self._populate_from_meta()
         self._populate_from_model()
 
     def _populate_from_model(self):
         """
-        Populates Options values from the given model on the __init__, we also inherit fields from the parent classes
+        Populates Options values from the given model on the __init__, we also inherit columns from the parent classes
         if they are models.
         """
-        # Fields defined in the current model.
-        new_fields = [
-            field for field in
-            self.model.__dict__.values() if isinstance(field, Field)
+        # Columns defined in the current model.
+        new_columns = [
+            column for column in
+            self.model.__dict__.values() if isinstance(column, Column)
         ]
 
-        new_fields = Fields(new_fields)
+        new_columns = Columns(new_columns)
 
-        # Set fields from base classes.
-        for base in self.model.mro()[:1]:  # We ignore the first one because it is itself, otherwise it conflicts.
+        # Set columns from base classes (including parents).
+        for base in self.model.mro()[:1]:
+            # We ignore the first one because it is itself, otherwise it conflicts.
             if hasattr(base, '_meta'):
-                for parent_field in base._meta.fields:
-                    if parent_field in new_fields:
+                for column in base._meta.columns:
+                    if column in new_columns:
                         raise ValueError(
-                            f"Field '{parent_field}' from {self.model} clashes with parent model {base}"
+                            f"Column '{column}' from {self.model} clashes with parent model {base}"
                         )
 
-                new_fields.extend(base._meta.fields)
+                new_columns.extend(base._meta.columns)
 
-        self.fields = new_fields
+        self.columns = new_columns
 
     def _populate_from_meta(self):
         """
@@ -199,7 +200,7 @@ class ModelBase(type):
                     f" supported formats by this storage are '{using.supported_formats}'"
                 )
 
-            df = using.read_file(cls._meta.table_name, cls._meta.fields.get_df_columns(), format)
+            df = using.read_file(cls._meta.table_name, cls._meta.columns.get_df_columns(), format)
 
         return df
 
@@ -210,18 +211,18 @@ class ModelBase(type):
         df = cls._create_df(using=storage)
 
         columns_from_df = frozenset(df.columns)
-        missing_columns = columns_from_df.difference(cls._meta.fields.get_df_columns())
+        missing_columns = columns_from_df.difference(cls._meta.columns.get_df_columns())
 
         if missing_columns:
             raise ValueError(
                 f"Dataframe columns do not match. df.columns: {df.columns},"
-                f" models: {cls._meta.fields.get_df_columns()}"
+                f" models: {cls._meta.columns.get_df_columns()}"
             )
 
         if cls._meta.auto_select:
-            df = df.select(cls._meta.fields.get_df_columns())
+            df = df.select(cls._meta.columns.get_df_columns())
 
-        columns_with_dtypes = cls._meta.fields.get_df_columns_polars(df.schema)
+        columns_with_dtypes = cls._meta.columns.get_df_columns_polars(df.schema)
         return df.with_columns(columns_with_dtypes)
 
 
@@ -231,19 +232,19 @@ class Model(metaclass=ModelBase):
     def __init__(self, **kwargs):
         for column, column_value in kwargs.items():
 
-            if column not in self._meta.fields.get_model_columns():
-                raise FieldNotExistsError(
-                    f"{self} does not have column '{column}', columns are: {self.fields}")
+            if column not in self._meta.columns.get_model_columns():
+                raise ColumnNotExistsError(
+                    f"{self} does not have column '{column}', columns are: {self.columns}")
             setattr(self, column, column_value)
 
     def __str__(self):
         cls_name = self.__class__.__qualname__
-        return f'<{cls_name}: {cls_name} object ({", ".join(self.fields)})>'
+        return f'<{cls_name}: {cls_name} object ({", ".join(self.columns)})>'
 
     @classmethod
     @property
-    def fields(cls):
-        return cls._meta.fields.get_model_columns()
+    def columns(cls):
+        return cls._meta.columns.get_model_columns()
 
     @classmethod
     def from_dict(cls, d: dict):

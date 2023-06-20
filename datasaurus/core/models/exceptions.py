@@ -10,5 +10,5 @@ class FormatNeededError(Exception):
     """Raise when the Model always needs a format and it was not provided"""
 
 
-class FieldNotExistsError(Exception):
-    """Raises when field does not exist in Model and its being provided"""
+class ColumnNotExistsError(Exception):
+    """Raises when column does not exist in Model and its being provided"""
