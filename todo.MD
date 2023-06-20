@@ -18,18 +18,19 @@
 - [x] Improve Model.save api: allow always for environment (as string) override.
 - [x] Add mysql support
 - [x] Add column_name option to Columns
+- [x] Add data types enforcement / casting from the Columns objects
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
 
 # Columns
 - [ ] Add more fields types
-- [ ] Add more options to Columns depending on the column Type, like 'unique',  'column_name'
+- [ ] Add more options to Columns depending on the column Type, like 'unique',  ~~'column_name'~~
 ... etc
 
 
 # Storages + IO
-- [ ] Make read/write operations to respect Fields options, like 'unique', 'column_name'
+- [ ] Make read/write operations to respect Fields options, like 'unique', ~~'column_name'~~
 - [ ] Add save modes such as: append, overwrite, 'delta'?
 - [ ] Change string SQL queries to something that build SQL queries safely.
 - [ ] Make tests where we do all possible IO combinations with all mixin implementations
@@ -39,7 +40,7 @@ to read but not to write.
 
 # General Stuff
 - [ ] Create custom exceptions, we are currently using Exception and ValueError everywhere. 
-- [ ] Change everything to `columns` (We now use the words fields / columns in several parts of the code)
+- [ ] Change everything to `columns` (We now use the words fields/columns in several parts of the code)
 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
