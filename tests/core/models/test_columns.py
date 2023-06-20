@@ -1,4 +1,7 @@
-from datasaurus.core.models.fields import Field, Fields
+import polars
+import pytest
+
+from datasaurus.core.models.fields import Field, Fields, StringField, IntegerField, DateColumn
 
 import polars as pl
 
@@ -47,6 +50,9 @@ def test_column_as_descriptors():
 
 
 def test_column_name():
+    """Tests that we get the correct column name, which might differ if we pass the 'column_name'
+    param
+    """
     col = Field()
     col.__set_name__(None, 'col')
 
@@ -59,7 +65,38 @@ def test_column_name():
     assert col_1.get_column_name() == 'column_name'
 
 
+def test_column_dtype():
+    stringcolumn = StringField
+    stringcolumn._override_polars_col = True
+
+    intcolumn = IntegerField
+    intcolumn._override_polars_col = True
+
+    datecolumn = DateColumn
+    datecolumn._override_polars_col = True
+
+    class Dummy:
+        col = stringcolumn()  # ok
+        col2 = stringcolumn(column_name='other_col_name')  # ok
+        col3 = stringcolumn(column_name='other_col_name', dtype=polars.Boolean)  # Value error
+        col4 = intcolumn(dtype=polars.UInt64)
+        col5 = datecolumn()
+
+    # Sucks to be comparing Strings vs actual objects, but as 0.17.15 we cannot compare polars.Exp
+    # as they are lazy Objects, check polars.Exp.__bool__ for more details.
+    assert str(Dummy.col.get_col_with_dtype(polars.Utf8)) == 'col("col")'
+    assert str(Dummy.col.get_col_with_dtype(polars.Int8)) == 'col("col").strict_cast(Utf8)'
+
+    with pytest.raises(ValueError) as e:
+        Dummy.col3.get_col_with_dtype(polars.Boolean)
+
+    assert str(Dummy.col4.get_col_with_dtype(polars.UInt8)) == 'col("col4").strict_cast(UInt64)'
+    assert str(Dummy.col5.get_col_with_dtype(polars.Utf8)) == 'col("col5").str.strptime()'
+    assert str(Dummy.col5.get_col_with_dtype(polars.UInt8)) == 'col("col5").strict_cast(Date)'
+
+
 def test_columns():
+    """Tests the container class Columns"""
     col_1 = Field()
     col_2 = Field(column_name='col_new')
 
