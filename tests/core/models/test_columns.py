@@ -1,6 +1,7 @@
 import polars
 import pytest
 
+from datasaurus.core.models import Model
 from datasaurus.core.models.columns import Column, Columns, StringColumn, IntegerColumn, DateColumn
 
 import polars as pl
@@ -97,7 +98,7 @@ def test_column_dtype_casts():
 
 
 def test_columns():
-    """Tests the container class Columns"""
+    """Tests the class datasaurus.core.models.columns.Columns"""
     col_1 = Column()
     col_2 = Column(name='col_new')
 
@@ -118,4 +119,30 @@ def test_columns():
 
     assert len(columns) == 3
     assert columns.get_model_columns() == ['col_1', 'col_2', 'col_3']
-    assert columns.get_df_columns() == ['col_1', 'col_new', 'col_3']
+    assert columns.get_df_column_names() == ['col_1', 'col_new', 'col_3']
+
+
+def test_columns_unique_attribute():
+    class DummyModel(Model):
+        col1 = StringColumn(unique=True)
+        col2 = StringColumn(unique=True)
+        col3 = IntegerColumn()
+
+        class Meta: ...
+
+    data_with_duplicates = {
+        'col1': ['test1', 'test2', 'test2'],
+        'col2': ['test01', 'test02', 'test02'],
+        'col3': [1, 2, 2]
+    }
+    data_without_duplicates = [
+        {'col1': 'test2', 'col2': 'test02', 'col3': 2},
+        {'col1': 'test1', 'col2': 'test01', 'col3': 1}
+    ]
+
+    model = DummyModel.from_dict(
+       data_with_duplicates
+    )
+
+    assert model._meta.columns.get_df_column_names_by_attrs(unique=True) == ['col1', 'col2']
+    assert model.df.to_dicts() == data_without_duplicates
