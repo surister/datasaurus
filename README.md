@@ -2,7 +2,7 @@ Datasaurus is a Data Engineering framework written in Python 3.7+
 
 It is based in Polars and heavily influenced by Django.
 
-The intention is to offer an opinionated, feature-rich and powerful framework to help you write
+Datasaurus offers an opinionated, feature-rich and powerful framework to help you write
 data pipelines, ETLs or data manipulation programs.
 
 [Documentation]() (TODO)
@@ -49,14 +49,13 @@ class ProfilesData(StorageGroup):
 
     
 # models.py
-from datasaurus.core.models import Model
-from datasaurus.core.models import StringField, IntegerField
+from datasaurus.core.models import Model, StringColumn, IntegerColumn
 
 class ProfileModel(Model):
-    id = IntegerField()
-    username = StringField()
-    mail = StringField()
-    sex = StringField()
+    id = IntegerColumn()
+    username = StringColumn()
+    mail = StringColumn()
+    sex = StringColumn()
 
     class Meta:
         storage = ProfilesData
