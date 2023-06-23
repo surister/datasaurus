@@ -19,28 +19,30 @@
 - [x] Add mysql support
 - [x] Add column_name option to Columns
 - [x] Add data types enforcement / casting from the Columns objects
+- [x] Add more fields types
+- [x] Change everything to `columns` (We now use the words fields/columns in several parts of the code)
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
+- [ ] Change _from_dict constructor into something more generic such as _from_data
+- [ ] [Bug] When you create a df from_dict, if you access to model.df twice, the second time raises and error
 
 # Columns
-- [ ] Add more fields types
-- [ ] Add more options to Columns depending on the column Type, like 'unique',  ~~'column_name'~~
-... etc
-
+- [ ] Add unit tests for enforce_dtype
+- [ ] Add more options to Columns depending on the column Type, like 'unique',  ~~'column_name'~~... etc
+- [ ] If auto_id is added, see how to add another option, ex: 'default' so we can pass stuff like lambda x: uuid4
 
 # Storages + IO
 - [ ] Make read/write operations to respect Fields options, like 'unique', ~~'column_name'~~
 - [ ] Add save modes such as: append, overwrite, 'delta'?
 - [ ] Change string SQL queries to something that build SQL queries safely.
-- [ ] Make tests where we do all possible IO combinations with all mixin implementations
-- [ ] Implement ndjson format
+- [ ] Unit test dataframe creation (3)
+- [ ] Add support for ndjson format
 - [ ] Investigate and choose the default mysql/mariadb driver https://docs.sqlalchemy.org/en/20/dialects/mysql.html (mysqlclient can be used)
 to read but not to write.
 
 # General Stuff
 - [ ] Create custom exceptions, we are currently using Exception and ValueError everywhere. 
-- [ ] Change everything to `columns` (We now use the words fields/columns in several parts of the code)
 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
@@ -50,3 +52,9 @@ to read but not to write.
 # For the future
 - [ ] Support delta tables
 - [ ] Fully support streaming
+- [ ] Validations and transformations with 2 different patterns.
+      1. We support inline basic validations/transformation like:
+      even_field = forms.IntegerField(validators=[validate_even])
+      2. Like https://django-filter.readthedocs.io/en/stable/guide/usage.html
+        where rules are outside the model, in a different class and linked in the
+        Model's Meta.
