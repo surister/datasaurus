@@ -15,13 +15,15 @@ class Column:
 
     def __init__(self,
                  name: Optional[str] = None,
-                 enforce_dtype=True,
-                 dtype=None,
+                 enforce_dtype: bool = True,
+                 dtype: Optional[polars.DataType] = None,
+                 unique: bool = False,
                  *args,
                  **kwargs):
         self.column_name = name
         self.enforce_dtype = enforce_dtype
         self.dtype = dtype
+        self.unique = unique
 
         #  Descriptor variables.
         self.name = None
@@ -36,7 +38,7 @@ class Column:
     def __get__(self, instance, owner):
         if self._override_polars_col:
             # We need this to test certain methods that are unreachable from outside
-            # the class because of the __get__
+            # the class because of the descriptor behaviour.
             return self
 
         if instance is None:
@@ -46,7 +48,18 @@ class Column:
         return self._value
 
     def get_cast_map(self, cast_map):
-        """Transient function that allows for this class' children to modify the cast map"""
+        """
+        Transient function that allows for this class' children to modify the cast map.
+
+        Example:
+            ```
+            class StringColumn(Column):
+                def get_cast_map(cast_map):
+                    if not str in cast_map:
+                        cast_map[str] = lambda x: str(x)
+                    return cast_map
+            ```
+        """
         return cast_map
 
     def get_col_with_dtype(self, current_dtype: polars.DataType):
@@ -106,9 +119,33 @@ class Columns(Collection):
     def extend(self, other: 'Columns') -> None:
         self._columns.extend(other._columns)
 
-    def get_df_columns(self) -> list[str]:
-        """Get a list of the columns that will be used on the df write/read operations"""
+    def get_df_column_names(self) -> list[str]:
+        """
+        Get a list of the columns that will be used on the df write/read operations
+        """
         return [column.get_column_name() for column in self._columns]
+
+    def get_df_column_names_by_attrs(self, **attr):
+        """
+        Get a list of the columns that match the given attributes and attributes values.
+
+        Example:
+
+            class Foo(Model):
+                name = StringColumn()
+                ss_number = StringColumn(unique=True)
+                mail = StringColumn(unique=True)
+
+            >>> Foo._meta.columns.get_df_column_names_by_attrs()
+                ['mail', 'ss_number']
+        """
+        return [
+            column.get_column_name()
+            for column in self._columns
+            # Don't despair, this sexy but bad one-liner just checks that all attrs exists
+            # with a given value in a column.
+            if all(map(lambda at: getattr(column, at[0]) == at[1], attr.items()))
+        ]
 
     def get_df_columns_polars(self, current_dtypes: dict[ColumnName: polars.DataType]) -> list[
         polars.Expr]:
@@ -120,7 +157,21 @@ class Columns(Collection):
         ]
 
     def get_model_columns(self) -> list:
-        """Get the list of columns as defined in the Model"""
+        """
+        Gets the list of columns as defined in the Model, not the actual column
+        names that will be used in write operations even though most of the time
+        they might match.
+
+        Example:
+            ```
+                class Foo(Model):
+                    attr1 = StringColumn()
+                    attr2 = IntegerColumn(column_name='myattribute')
+
+                Foo._meta.columns.get_model_columns()
+                >>> ['attr1', 'attr2']
+            ```
+        """
         return [column.name for column in self._columns]
 
 

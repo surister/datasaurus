@@ -200,7 +200,7 @@ class ModelBase(type):
                     f" supported formats by this storage are '{using.supported_formats}'"
                 )
 
-            df = using.read_file(cls._meta.table_name, cls._meta.columns.get_df_columns(), format)
+            df = using.read_file(cls._meta.table_name, cls._meta.columns.get_df_column_names(), format)
 
         return df
 
@@ -210,20 +210,25 @@ class ModelBase(type):
         """
         df = cls._create_df(using=storage)
 
+        if cls._meta.auto_select:
+            df = df.select(cls._meta.columns.get_df_column_names())
+
         columns_from_df = frozenset(df.columns)
-        missing_columns = columns_from_df.difference(cls._meta.columns.get_df_columns())
+        missing_columns = columns_from_df.difference(cls._meta.columns.get_df_column_names())
 
         if missing_columns:
             raise ValueError(
                 f"Dataframe columns do not match. df.columns: {df.columns},"
-                f" models: {cls._meta.columns.get_df_columns()}"
+                f" models: {cls._meta.columns.get_df_column_names()}"
             )
 
-        if cls._meta.auto_select:
-            df = df.select(cls._meta.columns.get_df_columns())
-
         columns_with_dtypes = cls._meta.columns.get_df_columns_polars(df.schema)
-        return df.with_columns(columns_with_dtypes)
+        unique_columns = cls._meta.columns.get_df_column_names_by_attrs(unique=True)
+
+        df = df.with_columns(columns_with_dtypes)
+        df = df.unique(unique_columns)
+
+        return df
 
 
 class Model(metaclass=ModelBase):
@@ -247,7 +252,7 @@ class Model(metaclass=ModelBase):
         return cls._meta.columns.get_model_columns()
 
     @classmethod
-    def from_dict(cls, d: dict, schema):
+    def from_dict(cls, d: dict, schema=None):
         setattr(cls, '_data_from_cls', d)
         setattr(cls, '_schema', schema)
         return cls
