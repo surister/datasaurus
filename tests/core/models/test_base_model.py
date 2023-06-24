@@ -1,12 +1,12 @@
 import pytest
 
 from datasaurus.core import models
-from datasaurus.core.models.exceptions import MissingMeta, ColumnNotExistsError
+from datasaurus.core.models.exceptions import MissingMetaError, ColumnNotExistsError
 from datasaurus.core.models.columns import Column, Columns
 
 
 def test_model_has_to_have_meta_class():
-    with pytest.raises(MissingMeta):
+    with pytest.raises(MissingMetaError):
         class SomeModel(models.Model):
             pass
 

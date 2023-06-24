@@ -4,7 +4,7 @@ from typing import Callable, Optional
 import polars
 from polars import DataFrame
 
-from datasaurus.core.models.exceptions import MissingMeta, FormatNotSupportedByModelError, \
+from datasaurus.core.models.exceptions import MissingMetaError, FormatNotSupportedByModelError, \
     FormatNeededError, ColumnNotExistsError
 from datasaurus.core.storage.format import DataFormat
 from datasaurus.core.storage.base import Storage, StorageGroup
@@ -122,7 +122,7 @@ class ModelBase(type):
     def _prepare(cls):
         meta = getattr(cls, 'Meta', None)
         if not meta:
-            raise MissingMeta(f'Model {cls} does not have Meta')
+            raise MissingMetaError(f'Model {cls} does not have Meta')
 
         opts = Options(meta, cls)
 
@@ -150,6 +150,7 @@ class ModelBase(type):
 
         if environment:
             storage = storage.storage_group.with_env(environment)
+
         return storage
 
     def _get_format_or_default(cls, format: Optional[DataFormat]):
@@ -167,7 +168,7 @@ class ModelBase(type):
         Does the heavy lifting of creating the Dataframe from the right data source, depending on
         opts (meta), the order of priority is as follows:
 
-        1. Data from constructor - Model.from_dict({'column1': [1,2,3})
+        1. Data from constructor - Model.from_dict({'column1': [1,2,3]})
         2. Data from calculation - Model.calculate_data()
         3. Data from Storage - Storage
         """
@@ -236,10 +237,10 @@ class Model(metaclass=ModelBase):
 
     def __init__(self, **kwargs):
         for column, column_value in kwargs.items():
-
             if column not in self._meta.columns.get_model_columns():
                 raise ColumnNotExistsError(
                     f"{self} does not have column '{column}', columns are: {self.columns}")
+
             setattr(self, column, column_value)
 
     def __str__(self):
