@@ -29,11 +29,12 @@
 
 # Columns
 - [ ] Add unit tests for enforce_dtype
-- [ ] Add more options to Columns depending on the column Type, like 'unique',  ~~'column_name'~~... etc
-- [ ] If auto_id is added, see how to add another option, ex: 'default' so we can pass stuff like lambda x: uuid4
+- [ ] Add more options to Columns depending on the column Type, like '~~unique~~',  ~~'column_name'~~... etc
+- [ ] If auto_id_add is added, see how to add another option, ex: 'default' so we can pass stuff like lambda x: uuid4
+- [ ] Add auto_id_add
 
 # Storages + IO
-- [ ] Make read/write operations to respect Fields options, like 'unique', ~~'column_name'~~
+- [ ] Make read/write operations to respect Fields options, like '~~unique~~', ~~'column_name'~~
 - [ ] Add save modes such as: append, overwrite, 'delta'?
 - [ ] Change string SQL queries to something that build SQL queries safely.
 - [ ] Unit test dataframe creation (3)
@@ -42,7 +43,8 @@
 to read but not to write.
 
 # General Stuff
-- [ ] Create custom exceptions, we are currently using Exception and ValueError everywhere. 
+- [ ] Create custom exceptions, we are currently using Exception and ValueError in many places. 
+- [ ] Add CI pipeline with unittests and linting.
 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
