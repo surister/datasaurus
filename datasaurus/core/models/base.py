@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import partial
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Union, Any
 
 import polars
 from polars import DataFrame
@@ -154,15 +154,26 @@ class ModelMeta(type):
 
         return storage
 
-    def _get_format_or_default(cls, format: Optional[DataFormat | str]) -> DataFormat | str:
+    def _get_format_or_default(cls, format: Optional[DataFormat | str] = None) -> DataFormat | str | None:
         """
-        If not format is given tries to infer it from the Meta.table_name.
+        If no format is given tries to get it from the model:
+
+        There are two ways of getting it:
+        1. From meta.format
+        2. Inferring it from the meta.table_name
         """
-        if not format and cls._meta.table_name.__contains__('.'):
+        if format:
+            return format
+
+        if cls._meta.format:
+            return cls._meta.format
+
+        if cls._meta.table_name.__contains__('.'):
             table_name, file_extension = cls._meta.table_name.split('.')
             if file_extension:
-                format = file_extension
-        return format
+                return file_extension
+
+        return None
 
     def _create_df(cls, storage: Optional[Storage]) -> DataFrame:
         """
@@ -194,7 +205,7 @@ class ModelMeta(type):
 
         else:
             storage = cls._get_storage_or_default(storage)
-            format = cls._get_format_or_default(cls._meta.format)
+            format = cls._get_format_or_default()
 
             if isinstance(format, str):
                 format = storage.supported_formats[format]
@@ -215,7 +226,7 @@ class ModelMeta(type):
 
             df = storage.read_file(cls._meta.table_name,
                                    cls._meta.columns.get_df_column_names(),
-                                   format)
+                                   format=format)
 
         return df
 
@@ -246,14 +257,6 @@ class ModelMeta(type):
             df = df.unique(unique_columns)
 
         return df
-
-
-class Transformation():
-    def __init__(self, *models):
-        self.models = models
-
-    def calculate_data(self) -> 'polars.DataFrame':
-        raise NotImplementedError()
 
 
 class Model(metaclass=ModelMeta):
