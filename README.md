@@ -38,7 +38,7 @@ data pipelines, ETLs or data manipulation programs.
 ```python
 # settings.py 
 from datasaurus.core.storage import PostgresStorage, StorageGroup, SqliteStorage
-from datasaurus.core.models import StringField, IntegerField
+from datasaurus.core.models import StringColumn, IntegerColumn
 
 # We set the environment that will be used.
 os.environ['DATASAURUS_ENVIRONMENT'] = 'dev'
