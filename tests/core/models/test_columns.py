@@ -128,7 +128,8 @@ def test_columns_unique_attribute():
         col2 = StringColumn(unique=True)
         col3 = IntegerColumn()
 
-        class Meta: ...
+        class Meta:
+            ...
 
     data_with_duplicates = {
         'col1': ['test1', 'test2', 'test2'],

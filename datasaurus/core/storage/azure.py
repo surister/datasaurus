@@ -1,9 +1,9 @@
+import contextlib
 from io import BytesIO
 
-try:
-    from azure.storage.blob import BlobServiceClient, ContainerClient
-except:
-    pass
+with contextlib.suppress(ImportError):
+    from azure.storage.blob import BlobServiceClient
+
 from datasaurus.core.storage.base import Storage, AUTO_RESOLVE
 
 

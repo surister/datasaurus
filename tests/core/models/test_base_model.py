@@ -31,7 +31,8 @@ def test_model_column_with_column_name_correctly_raises_when_set():
     class DummyModel(models.Model):
         column = Column(name='different_column_name')
 
-        class Meta: pass
+        class Meta:
+            pass
 
     value = 1
 
@@ -49,7 +50,8 @@ def test_model_has_correct_columns():
         column = Column(name='different_column_name')
         column2 = Column()
 
-        class Meta: pass
+        class Meta:
+            pass
 
     assert len(DummyModel.columns) == 2
     assert 'column' in DummyModel.columns and 'column2' in DummyModel.columns
@@ -60,11 +62,11 @@ def test_model_has_correct_meta_columns():
         column = Column(name='different_column_name')
         column2 = Column()
 
-        class Meta: pass
+        class Meta:
+            pass
 
     columns = DummyModel._meta.columns
 
     assert isinstance(columns, Columns)
     assert len(columns) == 2
     assert columns[0].column_name == 'different_column_name'
-

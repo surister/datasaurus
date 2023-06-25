@@ -101,7 +101,7 @@ class Options:
         return f'{self.__class__.__qualname__}({vars(self)})'
 
 
-class ModelBase(type):
+class ModelMeta(type):
     df: DataFrame
     _meta: Options
     _data_from_cls: Optional[dict] = None
@@ -111,7 +111,7 @@ class ModelBase(type):
 
         # This beauty here has been 'taken' from django itself, it ensures that only
         # subclasses of ModelBase are initiated.
-        parents = [b for b in bases if isinstance(b, ModelBase)]
+        parents = [b for b in bases if isinstance(b, ModelMeta)]
         if not parents:
             return super_new(cls, name, bases, attrs)
 
@@ -201,7 +201,8 @@ class ModelBase(type):
                     f" supported formats by this storage are '{using.supported_formats}'"
                 )
 
-            df = using.read_file(cls._meta.table_name, cls._meta.columns.get_df_column_names(), format)
+            df = using.read_file(cls._meta.table_name, cls._meta.columns.get_df_column_names(),
+                                 format)
 
         return df
 
@@ -232,7 +233,15 @@ class ModelBase(type):
         return df
 
 
-class Model(metaclass=ModelBase):
+class Transformation():
+    def __init__(self, *models):
+        self.models = models
+
+    def calculate_data(self) -> 'polars.DataFrame':
+        raise NotImplementedError()
+
+
+class Model(metaclass=ModelMeta):
     _meta: Options  # Type hint so autocompletion is helpful!
 
     def __init__(self, **kwargs):

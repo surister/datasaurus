@@ -147,8 +147,7 @@ class Columns(Collection):
             if all(map(lambda at: getattr(column, at[0]) == at[1], attr.items()))
         ]
 
-    def get_df_columns_polars(self, current_dtypes: dict[ColumnName: polars.DataType]) -> list[
-        polars.Expr]:
+    def get_df_columns_polars(self, current_dtypes: dict[ColumnName: polars.DataType]) -> list[polars.Expr]:
         """Get a list of the columns with the proper dtypes casts applied"""
         return [
             column.get_col_with_dtype(current_dtypes[column.get_column_name()])

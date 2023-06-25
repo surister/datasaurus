@@ -54,7 +54,7 @@ class Storage(ABC):
     def __set_name__(self, owner, name):
         self.storage_group = owner
         if not isinstance(owner(), StorageGroup):
-            raise Exception('Cannot register') # Todo refactor exception
+            raise Exception('Cannot register')  # Todo refactor exception
 
         if self.environment == AUTO_RESOLVE:
             self.environment = name
@@ -78,7 +78,8 @@ class StorageGroup:
     def with_env(cls, environment):
         if environment not in cls.environments:
             raise Exception(
-                f"Storage Group '{cls}' does not have environment {environment}, declared enviroinmentes are : {cls.environments}")
+                f"Storage Group '{cls}' does not have environment {environment},"
+                f" declared enviroinmentes are : {cls.environments}")
         return getattr(cls, environment)
 
     @classmethod
@@ -103,5 +104,6 @@ class StorageGroup:
             return getattr(cls, env_key)
 
         raise CannotResolveEnvironmentException(
-            f'Neither DATASAURUS_ENVIRONMENT nor {cls.__name__}_ENVIRONMENT are defined but "from_env" needs any of these two defined in order to resolve the right storage.'
+            f'Neither DATASAURUS_ENVIRONMENT nor {cls.__name__}_ENVIRONMENT are defined but '
+            f'"from_env" needs any of these two defined in order to resolve the right storage.'
         )

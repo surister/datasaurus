@@ -20,11 +20,11 @@ class StorageOperationMixinBase(ABC):
     def file_exists(self, file_name, format: FileFormat): ...
 
 
-def list_to_sql_columns(l: list[str]) -> str:
+def list_to_sql_columns(input_list: list[str]) -> str:
     """
     Transforms ["id", "username"...] into '(id, username)'
     """
-    return str(l).replace('[', '').replace(']', '').replace("'", "")
+    return str(input_list).replace('[', '').replace(']', '').replace("'", "")
 
 
 class SQLStorageOperationsMixin(StorageOperationMixinBase):
@@ -41,7 +41,8 @@ class SQLStorageOperationsMixin(StorageOperationMixinBase):
         if_exists = 'append' if self.file_exists(file_name) else 'replace'
         datasaurus_logger.debug(f'Attempting to write: {df}')
         datasaurus_logger.debug(
-            f'Write configuration: { {"table_name": file_name, "connection_uri": self.get_uri(), "if_exists": if_exists} }'
+            f'Write configuration:'
+            f' { {"table_name": file_name, "connection_uri": self.get_uri(), "if_exists": if_exists} }'
         )
         df.write_database(
             table_name=file_name,
