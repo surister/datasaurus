@@ -71,11 +71,11 @@ class LocalStorageOperationsMixin(StorageOperationMixinBase):
         return pathlib.Path(f'{self.get_uri()}/{file_name}.{format.name}').exists()
 
     def write_file(self, df: pl.DataFrame, file_name: str, format: FileFormat, **kwargs):
-        full_path = (
-            f'{self.path}{"" if self.path.endswith("/") else "/"}{file_name}.{format.name}'
-            if format
-            else file_name
-        )
+        full_path = (pathlib.Path(self.path) / file_name).with_suffix(suffix=format.suffix)
+
+        if not full_path.exists():
+            full_path.parent.mkdir(parents=True, exist_ok=True)
+
         _write_func = getattr(df, f'write_{format.name}')
         return _write_func(full_path, **kwargs)
 
