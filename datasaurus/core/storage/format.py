@@ -1,11 +1,14 @@
-from enum import Enum, auto
+from enum import Enum, auto, EnumMeta
 
 
 class DataFormat:
     """
     Dummy class just for type hinting.
     """
-    pass
+
+    def __getitem__(cls, name):
+        print('hey')
+        return cls._member_map_[name.upper()]
 
 
 class FormatNotSet(DataFormat):
@@ -13,10 +16,25 @@ class FormatNotSet(DataFormat):
         return False
 
     def __str__(self):
-        return 'FormatsNotSet'
+        return 'FormatNotSet'
 
 
-class FileFormat(DataFormat, Enum):
+class LowerIndexedMeta(EnumMeta):
+    def __getitem__(cls, name):
+        return cls._member_map_[name.upper()]
+
+
+class LowerIndexedEnum(Enum, metaclass=LowerIndexedMeta):
+    pass
+
+
+class FileFormat(DataFormat, LowerIndexedEnum):
+    JSON = auto()
+    CSV = auto()
+    PARQUET = auto()
+    EXCEL = auto()
+    AVRO = auto()
+
     @property
     def name(self) -> str:
         return super().name.lower()
@@ -24,8 +42,3 @@ class FileFormat(DataFormat, Enum):
     @property
     def suffix(self) -> str:
         return f'.{super().name.lower()}'
-    JSON = auto()
-    CSV = auto()
-    PARQUET = auto()
-    EXCEL = auto()
-    AVRO = auto()
