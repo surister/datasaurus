@@ -21,6 +21,9 @@ class FileFormat(DataFormat, Enum):
     def name(self) -> str:
         return super().name.lower()
 
+    @property
+    def suffix(self) -> str:
+        return f'.{super().name.lower()}'
     JSON = auto()
     CSV = auto()
     PARQUET = auto()
