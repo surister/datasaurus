@@ -228,7 +228,9 @@ class ModelMeta(type):
         unique_columns = cls._meta.columns.get_df_column_names_by_attrs(unique=True)
 
         df = df.with_columns(columns_with_dtypes)
-        df = df.unique(unique_columns)
+
+        if unique_columns:
+            df = df.unique(unique_columns)
 
         return df
 
