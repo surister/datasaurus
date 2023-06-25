@@ -80,8 +80,7 @@ class LocalStorageOperationsMixin(StorageOperationMixinBase):
         return _write_func(full_path, **kwargs)
 
     def read_file(self, file_name, columns, format: FileFormat = None, **kwargs):
-        srcdir = pathlib.Path(self.path)
-        full_path = (srcdir / file_name).with_suffix(f'.{format.name}')
+        full_path = (pathlib.Path(self.path) / file_name).with_suffix(format.suffix)
 
         if not full_path.exists():
             raise ValueError(f"Cannot find '{full_path}'")
