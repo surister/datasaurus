@@ -1,5 +1,6 @@
+from copy import deepcopy
 from functools import partial
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import polars
 from polars import DataFrame
@@ -153,9 +154,9 @@ class ModelMeta(type):
 
         return storage
 
-    def _get_format_or_default(cls, format: Optional[DataFormat]):
+    def _get_format_or_default(cls, format: Optional[DataFormat | str]) -> DataFormat | str:
         """
-        If not format is given tries to infer it from the Meta.table_name
+        If not format is given tries to infer it from the Meta.table_name.
         """
         if not format and cls._meta.table_name.__contains__('.'):
             table_name, file_extension = cls._meta.table_name.split('.')
@@ -163,10 +164,10 @@ class ModelMeta(type):
                 format = file_extension
         return format
 
-    def _create_df(cls, using: Optional[Storage]) -> DataFrame:
+    def _create_df(cls, storage: Optional[Storage]) -> DataFrame:
         """
         Does the heavy lifting of creating the Dataframe from the right data source, depending on
-        opts (meta), the order of priority is as follows:
+        Options (Meta class in model), the order of priority is as follows:
 
         1. Data from constructor - Model.from_dict({'column1': [1,2,3]})
         2. Data from calculation - Model.calculate_data()
@@ -192,17 +193,29 @@ class ModelMeta(type):
                     f'Function calculate_data has to return a polars Dataframe, not a {type(df)}')
 
         else:
-            using = cls._get_storage_or_default(using)
-            format = cls._meta.format
+            storage = cls._get_storage_or_default(storage)
+            format = cls._get_format_or_default(cls._meta.format)
 
-            if format and not using.supports_format(format):
+            if isinstance(format, str):
+                format = storage.supported_formats[format]
+
+            if format and not storage.supports_format(format):
                 raise ValueError(
-                    f"Storage of type '{type(using)}' does not support format '{format}',"
-                    f" supported formats by this storage are '{using.supported_formats}'"
+                    f"Storage of type '{type(storage)}' does not support format '{format}',"
+                    f" supported formats by this storage are '{storage.supported_formats}'"
                 )
 
-            df = using.read_file(cls._meta.table_name, cls._meta.columns.get_df_column_names(),
-                                 format)
+            if storage.needs_format and not format:
+                raise FormatNeededError(
+                    f"Cannot create Dataframe because storage of type '{type(storage)}'"
+                    " needs a format and it was not provided in the Meta class or it could"
+                    " not be inferred from the table_name attribute. To fix this add format "
+                    " in the Model's Meta class or an extension to the table_name"
+                )
+
+            df = storage.read_file(cls._meta.table_name,
+                                   cls._meta.columns.get_df_column_names(),
+                                   format)
 
         return df
 
@@ -210,7 +223,7 @@ class ModelMeta(type):
         """
         Applies schema validation (dtypes), data validations and options to the newly created dataframe.
         """
-        df = cls._create_df(using=storage)
+        df = cls._create_df(storage=storage)
 
         if cls._meta.auto_select:
             df = df.select(cls._meta.columns.get_df_column_names())
