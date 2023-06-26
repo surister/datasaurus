@@ -260,7 +260,7 @@ class ModelMeta(type):
 
 
 class Model(metaclass=ModelMeta):
-    _meta: Options  # Type hint so autocompletion is helpful!
+    _meta: Options  # Defined to have autocompletion.
 
     def __init__(self, **kwargs):
         for column, column_value in kwargs.items():
@@ -313,4 +313,5 @@ class Model(metaclass=ModelMeta):
             )
 
         df = cls._get_df()
+
         storage.write_file(df, table_name, format=format, **kwargs)

@@ -7,6 +7,11 @@ ColumnName = str
 
 
 class Column:
+    """
+    Represents a column.
+
+    # Todo
+    """
     _override_polars_col = False  # Set only to true in unit tests.
 
     default_dtype = polars.Utf8
@@ -49,20 +54,44 @@ class Column:
 
     def get_cast_map(self, cast_map):
         """
-        Transient function that allows for this class' children to modify the cast map.
+        Transient function that allows for `Column` children to modify the cast map.
 
-        Example:
-            ```
-            class StringColumn(Column):
-                def get_cast_map(cast_map):
-                    if not str in cast_map:
-                        cast_map[str] = lambda x: str(x)
-                    return cast_map
-            ```
+        Examples
+        --------
+
+        >>>class StringColumn(Column):
+        ...    def get_cast_map(cast_map):
+        ...        if not str in cast_map:
+        ...            cast_map[str] = lambda x: str(x)
+        ...        return cast_map
         """
         return cast_map
 
     def get_col_with_dtype(self, current_dtype: polars.DataType):
+        """
+        Returns the equivalent of the `Column` to a `polars.col` type with the
+        data type cast applied.
+
+        It takes into account the current df's column data type because sometimes for example
+        if the current dtype and our defined column dtype is the same, no casting is needed.
+
+        If any entry exists in `cast_map` it will use that casting, specially useful when
+        doing `col.cast` is not enough to cast from one type to another, for example when
+        casting a string containing a date to date dtype.
+
+        If no entry exists in `cast_map` it will use the `col.cast` and let polars gives you
+        and exception if the casting is for some reason invalid.
+
+        Parameters
+        ----------
+        current_dtype : polars.DataType
+            The current dataframe dtype for this column.
+
+        Note
+        ----
+        This function should only be used after the dataframe is already loaded, since
+        its depends on a current data type to perform certain casting validations.
+        """
         cast_map = self.get_cast_map(self.cast_map)
         col = polars.col(self.get_column_name())
 
@@ -77,7 +106,7 @@ class Column:
             return col
 
         if target_dtype not in self.supported_dtypes:
-            raise ValueError(f'Dtype {target_dtype} not supported by {type(self)}')
+            raise ValueError(f"Dtype '{target_dtype}' is not supported by {type(self)}")
 
         if not self.dtype and current_dtype in cast_map:
             return cast_map[current_dtype](col)
@@ -85,6 +114,7 @@ class Column:
         return col.cast(target_dtype)
 
     def get_column_name(self):
+        """Returns the defined `column_name` or the name from __set_name__"""
         return self.column_name or self.name
 
     def __str__(self):
@@ -96,7 +126,12 @@ class Column:
 
 
 class Columns(Collection):
-    """Class that represents a group of Columns. One columns object per Model"""
+    """
+    Class that represents a group of Columns. Used for column filtering, attribute retrieval
+    and general utils operations.
+
+    One `Columns` object per Model is expected but not enforced.
+    """
 
     def __init__(self, initial_columns: list[Column] = None):
         self._columns = initial_columns or []
@@ -121,23 +156,24 @@ class Columns(Collection):
 
     def get_df_column_names(self) -> list[str]:
         """
-        Get a list of the columns that will be used on the df write/read operations
+        Returns a list of the columns that will be used on the df write/read operations.
         """
         return [column.get_column_name() for column in self._columns]
 
     def get_df_column_names_by_attrs(self, **attr):
         """
-        Get a list of the columns that match the given attributes and attributes values.
+        Returns a list of the columns that match the given attributes and values.
 
-        Example:
+        Examples
+        --------
 
-            class Foo(Model):
-                name = StringColumn()
-                ss_number = StringColumn(unique=True)
-                mail = StringColumn(unique=True)
+            >>> class Foo(Model):
+            ...     name = StringColumn()
+            ...     ss_number = StringColumn(unique=True)
+            ...     mail = StringColumn(unique=True)
 
-            >>> Foo._meta.columns.get_df_column_names_by_attrs()
-                ['mail', 'ss_number']
+            >>> Foo._meta.columns.get_df_column_names_by_attrs(unique=True)
+            ['mail', 'ss_number']
         """
         return [
             column.get_column_name()
@@ -148,7 +184,7 @@ class Columns(Collection):
         ]
 
     def get_df_columns_polars(self, current_dtypes: dict[ColumnName: polars.DataType]) -> list[polars.Expr]:
-        """Get a list of the columns with the proper dtypes casts applied"""
+        """Returns a list of the columns with the proper dtypes casts applied"""
         return [
             column.get_col_with_dtype(current_dtypes[column.get_column_name()])
             if column.enforce_dtype else column.get_column_name()
@@ -157,19 +193,18 @@ class Columns(Collection):
 
     def get_model_columns(self) -> list:
         """
-        Gets the list of columns as defined in the Model, not the actual column
-        names that will be used in write operations even though most of the time
-        they might match.
+        Returns the list of columns as defined in the Model, they might actually not be
+        the one used on read/write opperations.
 
-        Example:
-            ```
-                class Foo(Model):
-                    attr1 = StringColumn()
-                    attr2 = IntegerColumn(column_name='myattribute')
+        Examples:
+        ---------
 
-                Foo._meta.columns.get_model_columns()
-                >>> ['attr1', 'attr2']
-            ```
+        >>> class Foo(Model):
+        ...     attr1 = StringColumn()
+        ...     attr2 = IntegerColumn(column_name='myattribute')
+
+        >>>Foo._meta.columns.get_model_columns()
+           ['attr1', 'attr2']
         """
         return [column.name for column in self._columns]
 
