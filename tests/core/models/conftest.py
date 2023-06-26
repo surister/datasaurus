@@ -8,7 +8,6 @@ from datasaurus.core import models
 from datasaurus.core.models import Model
 from datasaurus.core.models.columns import StringColumn, IntegerColumn
 from datasaurus.core.storage import StorageGroup, LocalStorage
-from datasaurus.core.storage.format import FileFormat
 
 
 @pytest.fixture
