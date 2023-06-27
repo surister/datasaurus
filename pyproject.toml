@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "datasaurus"
-version = "0.0.1dev1"
+version = "0.0.1dev2"
 description = "Data Engineering framework based on Polars.rs"
 repository = "https://www.github.com/surister/datasaurus"
 authors = ["surister <surister98@gmail.com>"]
@@ -14,14 +14,13 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 polars = "^0.17.15"
 connectorx = [
-    {version = "^0.3.1", python="^3.9"},
-    {version= "^0.3.2a5", python="^3.11"}
+    {version = "^0.3.1", python="^3.8"},
+    {version= "^0.3.2a6", python="^3.11"}
 ]
 pyarrow = "^12.0.0"
-adbc-driver-sqlite = "^0.4.0"
 pandas = "^2.0.2"
 sqlalchemy = "^2.0.15"
 

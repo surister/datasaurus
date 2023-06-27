@@ -1,5 +1,6 @@
 import pathlib
 from abc import ABC, abstractmethod
+from typing import List
 
 import polars as pl
 
@@ -20,7 +21,7 @@ class StorageOperationMixinBase(ABC):
     def file_exists(self, file_name, format: FileFormat): ...
 
 
-def list_to_sql_columns(input_list: list[str]) -> str:
+def list_to_sql_columns(input_list: List[str]) -> str:
     """
     Transforms ["id", "username"...] into '(id, username)'
     """

@@ -1,9 +1,10 @@
 from functools import partial
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import polars
 from polars import DataFrame
 
+from datasaurus import classproperty
 from datasaurus.core.models.exceptions import MissingMetaError, FormatNotSupportedByModelError, \
     FormatNeededError, ColumnNotExistsError
 from datasaurus.core.storage.format import DataFormat
@@ -129,7 +130,7 @@ class ModelMeta(type):
         setattr(cls, '_meta', opts)
         setattr(cls, 'df', lazy_func(cls._get_df))
 
-    def _get_storage_or_default(cls, storage: Optional[Storage | StorageGroup],
+    def _get_storage_or_default(cls, storage: Optional[Union[Storage, StorageGroup]],
                                 environment: Optional[str] = None) -> Storage:
         """
         Resolves the appropriate storage and its environment.
@@ -153,7 +154,8 @@ class ModelMeta(type):
 
         return storage
 
-    def _get_format_or_default(cls, format: Optional[DataFormat | str] = None) -> DataFormat | str | None:
+    def _get_format_or_default(cls, format: Optional[Union[DataFormat, str]] = None) -> Optional[
+        Union[DataFormat, str]]:
         """
         If no format is given tries to get it from the model:
 
@@ -229,7 +231,7 @@ class ModelMeta(type):
 
         return df
 
-    def _get_df(cls, storage: Optional[Storage | StorageGroup] = None):
+    def _get_df(cls, storage: Optional[Union[Storage, StorageGroup]] = None):
         """
         Applies schema validation (dtypes), data validations and options to the newly created dataframe.
         """
@@ -273,8 +275,7 @@ class Model(metaclass=ModelMeta):
         cls_name = self.__class__.__qualname__
         return f'<{cls_name}: {cls_name} object ({", ".join(self.columns)})>'
 
-    @classmethod
-    @property
+    @classproperty
     def columns(cls):
         return cls._meta.columns.get_model_columns()
 

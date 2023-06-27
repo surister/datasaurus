@@ -4,6 +4,7 @@ from typing import Union
 
 import polars
 
+from datasaurus.core.models.base import classproperty
 from datasaurus.core.storage.format import DataFormat, FormatNotSet
 
 
@@ -82,8 +83,7 @@ class StorageGroup:
                 f" declared enviroinmentes are : {cls.environments}")
         return getattr(cls, environment)
 
-    @classmethod
-    @property
+    @classproperty
     def from_env(cls) -> Storage:
         """
         Tries to infer the environment from two different env variables.

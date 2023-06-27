@@ -1,5 +1,5 @@
 from collections.abc import Collection
-from typing import Optional
+from typing import Optional, List, Dict
 
 import polars
 
@@ -133,7 +133,7 @@ class Columns(Collection):
     One `Columns` object per Model is expected but not enforced.
     """
 
-    def __init__(self, initial_columns: list[Column] = None):
+    def __init__(self, initial_columns: List[Column] = None):
         self._columns = initial_columns or []
 
     def __getitem__(self, item):
@@ -154,7 +154,7 @@ class Columns(Collection):
     def extend(self, other: 'Columns') -> None:
         self._columns.extend(other._columns)
 
-    def get_df_column_names(self) -> list[str]:
+    def get_df_column_names(self) -> List[str]:
         """
         Returns a list of the columns that will be used on the df write/read operations.
         """
@@ -183,7 +183,7 @@ class Columns(Collection):
             if all(map(lambda at: getattr(column, at[0]) == at[1], attr.items()))
         ]
 
-    def get_df_columns_polars(self, current_dtypes: dict[ColumnName: polars.DataType]) -> list[polars.Expr]:
+    def get_df_columns_polars(self, current_dtypes: Dict[ColumnName, polars.DataType]) -> List[polars.Expr]:
         """Returns a list of the columns with the proper dtypes casts applied"""
         return [
             column.get_col_with_dtype(current_dtypes[column.get_column_name()])
