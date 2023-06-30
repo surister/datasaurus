@@ -1,4 +1,4 @@
-Datasaurus is a Data Engineering framework written in Python 3.7+
+Datasaurus is a Data Engineering framework written in Python 3.8, 3.9, 3.10 and 3.11
 
 It is based in Polars and heavily influenced by Django.
 
