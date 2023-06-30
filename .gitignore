@@ -170,3 +170,4 @@ sqlitetest.py
 *.sqlite
 *.json
 data
+*.delta
