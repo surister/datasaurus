@@ -6,7 +6,7 @@ repository = "https://www.github.com/surister/datasaurus"
 authors = ["surister <surister98@gmail.com>"]
 readme = "README.md"
 license = "MIT"
-keywords = ["python3", "data", "polars", "dataframes", "framework", "OOP"]
+keywords = ["python3", "data", "polars", "dataframes", "framework", 'data engineering']
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Topic :: Software Development :: Libraries"
@@ -14,7 +14,7 @@ classifiers = [
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.8.1"
 polars = "^0.17.15"
 connectorx = [
     {version = "^0.3.1", python="^3.8"},
@@ -23,7 +23,7 @@ connectorx = [
 pyarrow = "^12.0.0"
 pandas = "^2.0.2"
 sqlalchemy = "^2.0.15"
-
+deltalake = "^0.10.0"
 
 [tool.poetry.group.azure.dependencies]
 azure-storage-blob = "^12.16.0"
@@ -31,15 +31,12 @@ azure-identity = "^1.13.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
-
-[tool.poetry.group.test.dependencies]
-factory-boy = "^3.2.1"
+flake8 = "^6.0.0"
 
 [tool.poetry.group.mysql.dependencies]
 mysql-connector-python = "^8.0.33"
 mysqlclient = "^2.1.1"
 pymysql = "^1.0.3"
-
 
 [tool.poetry.group.postgres.dependencies]
 psycopg2 = "^2.9.6"
