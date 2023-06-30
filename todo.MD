@@ -21,20 +21,25 @@
 - [x] Add data types enforcement / casting from the Columns objects
 - [x] Add more fields types
 - [x] Change everything to `columns` (We now use the words fields/columns in several parts of the code)
+- [x] Add more options to Columns depending on the column Type, like 'unique',  'column_name'
+- [x] Make read/write operations to respect Fields options, like 'column_name'
+- [x] Create factory for models (like factory-boy + faker)
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
 - [ ] Change _from_dict constructor into something more generic such as _from_data
 - [ ] [Bug] When you create a df from_dict, if you access to model.df twice, the second time raises and error
+- [ ] Cannot write from one mixin to another (create df from one storage and save it to another if it's of different type)
+- [ ] Make factory be able to create dataframe as well
+- [ ] Give the ability to factory to use multiprocessing to create larges amount of data quick
+- [ ] Create unit tests for factory (once the three above are done) 
 
 # Columns
 - [ ] Add unit tests for enforce_dtype
-- [ ] Add more options to Columns depending on the column Type, like '~~unique~~',  ~~'column_name'~~... etc
 - [ ] If auto_id_add is added, see how to add another option, ex: 'default' so we can pass stuff like lambda x: uuid4
 - [ ] Add auto_id_add
 
 # Storages + IO
-- [ ] Make read/write operations to respect Fields options, like '~~unique~~', ~~'column_name'~~
 - [ ] Add save modes such as: append, overwrite, 'delta'?
 - [ ] Change string SQL queries to something that build SQL queries safely.
 - [ ] Unit test dataframe creation (3)
