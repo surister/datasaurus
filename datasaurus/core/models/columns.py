@@ -32,13 +32,9 @@ class Column:
 
         #  Descriptor variables.
         self.name = None
-        self._value = None
 
     def __set_name__(self, owner, name):
         self.name = name
-
-    def __set__(self, instance, value):
-        self._value = value
 
     def __get__(self, instance, owner):
         if self._override_polars_col:
@@ -50,7 +46,7 @@ class Column:
             # It's being called from the cls rather an instance of the cls.
             # Ex: Model.col instead of Model().col
             return polars.col(self.get_column_name())
-        return self._value
+        raise Exception('Should not be here')
 
     def get_cast_map(self, cast_map):
         """
@@ -150,6 +146,9 @@ class Columns(Collection):
 
     def __contains__(self, item):
         return item.name in self.get_model_columns()
+
+    def __eq__(self, other):
+        return self.get_model_columns() == other.get_model_columns()
 
     def extend(self, other: 'Columns') -> None:
         self._columns.extend(other._columns)
