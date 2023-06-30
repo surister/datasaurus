@@ -1,4 +1,4 @@
-from datasaurus.core.models.columns import Column
+from datasaurus.core.models.columns import Column, Columns
 
 
 class factory_attribute(Column):
@@ -32,9 +32,11 @@ class ModelFactory:
         cls.validate_columns(factory_cols)
 
         rows = []
+
         for _ in range(n_rows):
             values_dict = {k: v.evaluate() for k, v in factory_cols.items()}
             rows.append(
                 cls.Meta.model(**values_dict)
             )
+
         return rows

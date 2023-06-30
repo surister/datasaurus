@@ -154,8 +154,7 @@ class ModelMeta(type):
 
         return storage
 
-    def _get_format_or_default(cls, format: Optional[Union[DataFormat, str]] = None) -> Optional[
-        Union[DataFormat, str]]:
+    def _get_format_or_default(cls, format: Optional[Union[DataFormat, str]] = None) -> Optional[Union[DataFormat, str]]:
         """
         If no format is given tries to get it from the model:
 
