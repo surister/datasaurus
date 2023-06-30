@@ -271,9 +271,11 @@ class Model(metaclass=ModelMeta):
 
             setattr(self, column, column_value)
 
+        super().__init__(**kwargs)
+
     def __str__(self):
         cls_name = self.__class__.__qualname__
-        return f'<{cls_name}: {cls_name} object ({", ".join(self.columns)})>'
+        return f'<{cls_name}: {cls_name} object({", ".join(self.columns)})>'
 
     @classproperty
     def columns(cls):
