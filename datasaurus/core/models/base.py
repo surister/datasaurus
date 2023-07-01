@@ -270,7 +270,7 @@ class Model(metaclass=ModelMeta):
 
             setattr(self, column, column_value)
 
-        super().__init__(**kwargs)
+        super().__init__()
 
     def __str__(self):
         cls_name = self.__class__.__qualname__
