@@ -7,7 +7,6 @@ class DataFormat:
     """
 
     def __getitem__(cls, name):
-        print('hey')
         return cls._member_map_[name.upper()]
 
 
