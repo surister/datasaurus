@@ -26,10 +26,10 @@
 - [x] Create factory for models (like factory-boy + faker)
 - [x] Make factory be able to create dataframe as well
 - [x] Give the ability to factory to use multiprocessing to create larges amount of data quick
+- [x] Change _from_dict constructor into something more generic such as _from_data
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
-- [ ] Change _from_dict constructor into something more generic such as _from_data
 - [ ] [Bug] When you create a df from_dict, if you access to model.df twice, the second time raises and error
 - [ ] Cannot write from one mixin to another (create df from one storage and save it to another if it's of different type)
 - [ ] Create unit tests for factory (once the three above are done) 

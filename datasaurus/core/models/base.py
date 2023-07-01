@@ -3,6 +3,7 @@ from typing import Callable, Optional, Union
 
 import polars
 from polars import DataFrame
+from polars.type_aliases import FrameInitTypes, SchemaDefinition
 
 from datasaurus import classproperty
 from datasaurus.core.models.exceptions import MissingMetaError, FormatNotSupportedByModelError, \
@@ -281,7 +282,7 @@ class Model(metaclass=ModelMeta):
         return cls._meta.columns.get_model_columns()
 
     @classmethod
-    def from_dict(cls, d: dict, schema=None):
+    def from_data(cls, d: FrameInitTypes, schema: SchemaDefinition = None):
         setattr(cls, '_data_from_cls', d)
         setattr(cls, '_schema', schema)
         return cls

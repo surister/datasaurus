@@ -35,10 +35,10 @@ class PythonMultiprocessing(ExecutionStrategy):
 
     Parameters
     ----------
-    processes: (int)
+    processes : int
         The processes that will be used, if None Python will use all the available cores.
 
-    chunk_size: (int)
+    chunk_size : int
         The approximate amount of chunks that the iterable will be chopped into and passed
         into the process to execute.
 
@@ -55,7 +55,7 @@ class PythonMultiprocessing(ExecutionStrategy):
 
         Parameters
         ----------
-        n: (int)
+        n : int
             The total amount of iterations.
         """
         return n // os.cpu_count()
@@ -123,4 +123,4 @@ class ModelFactory:
             func=cls.generate_one_row
         )
 
-        return cls.Meta.model.from_dict(rows)
+        return cls.Meta.model.from_data(rows)
