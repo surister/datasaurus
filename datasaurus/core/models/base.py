@@ -188,7 +188,9 @@ class ModelMeta(type):
         if cls._data_from_cls is not None:
             df = polars.DataFrame(cls._data_from_cls, schema=cls._schema)
             del cls._data_from_cls
+            del cls._schema
             cls._data_from_cls = None
+            cls._schema = None
 
         elif cls._meta.recalculate:
             try:
@@ -282,8 +284,11 @@ class Model(metaclass=ModelMeta):
         return cls._meta.columns.get_model_columns()
 
     @classmethod
-    def from_data(cls, d: FrameInitTypes, schema: SchemaDefinition = None):
-        setattr(cls, '_data_from_cls', d)
+    def from_data(cls, data: FrameInitTypes, schema: SchemaDefinition = None):
+        if not data:
+            raise ValueError('Data cannot be None')
+
+        setattr(cls, '_data_from_cls', data)
         setattr(cls, '_schema', schema)
         return cls
 

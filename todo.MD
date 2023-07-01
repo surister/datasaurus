@@ -27,13 +27,15 @@
 - [x] Make factory be able to create dataframe as well
 - [x] Give the ability to factory to use multiprocessing to create larges amount of data quick
 - [x] Change _from_dict constructor into something more generic such as _from_data
+- [x] Ability to create dummy data from a given Model, (maybe implement with faker boy)
+- [x] [Bug] When you create a df from_dict, if you access to model.df twice, the second time raises
+  and error (not a bug, its expected behaviour)
+- [x] Make Model.from_dict constructor raise exception when None is passed
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
-- [ ] [Bug] When you create a df from_dict, if you access to model.df twice, the second time raises and error
 - [ ] Cannot write from one mixin to another (create df from one storage and save it to another if it's of different type)
 - [ ] Create unit tests for factory (once the three above are done) 
-- [ ] Make Model.from_dict constructor raise exception when None is passed
 
 # Columns
 - [ ] Add unit tests for enforce_dtype
@@ -51,11 +53,14 @@ to read but not to write.
 # General Stuff
 - [ ] Create custom exceptions, we are currently using Exception and ValueError in many places. 
 - [ ] Add CI pipeline with unittests and linting.
+- [ ] Investigate a pattern for ETL/Pipeline creation
+- [ ] Investigate how are we going to manage dependencies between models
+- [ ] Perhaps recalculate = 'Always', 'Once', 'If not storage data' where 'if not storage data' is default could be interesting for entities
 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
 - [ ] Create utility that can give you Model code from inferred data like django inspectdb
-- [ ] Ability to create dummy data from a given Model, (maybe implement with faker boy)
+- [ ] Utility that creates diagram of entity dependencies
 
 # For the future
 - [ ] Support delta tables
