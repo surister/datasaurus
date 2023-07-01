@@ -24,30 +24,20 @@ def test_column_as_descriptors():
     cls_col = getattr(Dummy, col_name)
     cls_col2 = getattr(Dummy, col_with_column_name)
 
-    instance_col = getattr(dummy, col_name)
-    instance_col2 = getattr(dummy, col_with_column_name)
-
     # Col without column_name
     assert hasattr(Dummy, col_name)
     assert isinstance(cls_col, type(pl.col(col_name)))
     assert col_name in str(cls_col)
-    assert instance_col is None
 
     # Col with column name
     assert hasattr(Dummy, col_with_column_name)
     assert isinstance(cls_col2, type(pl.col(col_with_column_name)))
     assert other_col_name in str(cls_col2)
-    assert instance_col2 is None
 
-    # Test the descriptors __get__ and __set__ on instance as
+    # Test the descriptors __get__ on instance as
     # they behave differently when used in cls vs instance.
-    col_val = 1
-
-    dummy.col = col_val
-    dummy.col2 = col_val
-
-    assert dummy.col == col_val
-    assert dummy.col2 == col_val
+    with pytest.raises(Exception):
+        dummy.col
 
 
 def test_column_name():
@@ -141,7 +131,7 @@ def test_columns_unique_attribute():
         {'col1': 'test1', 'col2': 'test01', 'col3': 1}
     ]
 
-    model = DummyModel.from_dict(
+    model = DummyModel.from_data(
        data_with_duplicates
     )
 
