@@ -1,3 +1,8 @@
+import os
+from abc import ABC, abstractmethod
+from typing import Callable, List, Dict
+
+from datasaurus.core.models import Model
 from datasaurus.core.models.columns import Column, Columns
 
 
@@ -12,38 +17,110 @@ class factory_attribute(Column):
         return self.default_value_or_lambda
 
 
+class ExecutionStrategy(ABC):
+    @abstractmethod
+    def execute(self, iterations: int, func: Callable, **extra_options):
+        pass
+
+
+class PythonNormal(ExecutionStrategy):
+    """Normal Python loop execution"""
+    def execute(self, iterations: int, func: Callable, **extra_options):
+        return [func() for _ in range(iterations)]
+
+
+class PythonMultiprocessing(ExecutionStrategy):
+    """
+    Python multiprocessing execution, processes and chunk_size can be tweaked.
+
+    Parameters
+    ----------
+    processes: (int)
+        The processes that will be used, if None Python will use all the available cores.
+
+    chunk_size: (int)
+        The approximate amount of chunks that the iterable will be chopped into and passed
+        into the process to execute.
+
+    """
+
+    def __init__(self, processes: int = None, chunk_size: int = None):
+        self.processes = processes or os.cpu_count()
+        self.chunk_size = chunk_size
+
+    def get_chunksize(self, n) -> int:
+        """
+        Returns an approximate of a good chunksize, giving every process the same amount of
+        tasks.
+
+        Parameters
+        ----------
+        n: (int)
+            The total amount of iterations.
+        """
+        return n // os.cpu_count()
+
+    def execute(self, iterations: int, func: Callable, **extra_options):
+        def _parallelize_obj_creation(n, func):
+            import multiprocessing as mp
+            with mp.Pool(self.processes) as pool:
+                res = pool.imap(func, range(n), chunksize=self.chunk_size or self.get_chunksize(n))
+                return list(res)
+
+        return _parallelize_obj_creation(iterations, func)
+
+
 class ModelFactory:
     class Meta:
         model = None
+        execution_strategy = None
 
     @classmethod
-    def get_columns(cls):
+    def get_execution_strategy(cls) -> ExecutionStrategy:
+        return (
+            cls.Meta.execution_strategy
+            if hasattr(cls.Meta, 'execution_strategy')
+            else PythonNormal()
+        )
+
+    @classmethod
+    def get_columns(cls) -> Dict[str, factory_attribute]:
         return {k: v for k, v in cls.__dict__.items() if isinstance(v, factory_attribute)}
 
     @classmethod
-    def validate_columns(cls, attrs):
+    def validate_columns(cls, attrs) -> None:
         columns = Columns(attrs.values())
         if columns != cls.Meta.model._meta.columns:
             raise Exception('Cols are not the same')
 
     @classmethod
-    def create_rows(cls, n_rows: int):
+    def create_rows(cls, n_rows: int) -> List[Model]:
         factory_cols = cls.get_columns()
         cls.validate_columns(factory_cols)
 
-        rows = []
+        ex = cls.get_execution_strategy()
 
-        for _ in range(n_rows):
-            values_dict = {k: v.evaluate() for k, v in factory_cols.items()}
-            rows.append(
-                cls.Meta.model(**values_dict)
-            )
-
-        return rows
+        return ex.execute(
+            iterations=n_rows,
+            func=lambda: cls.Meta.model(
+                **cls.generate_one_row()
+            ),
+        )
 
     @classmethod
-    def create_df(cls, n_rows: int):
+    def generate_one_row(cls, _=None) -> dict:
+        return {k: v.evaluate() for k, v in cls.get_columns().items()}
+
+    @classmethod
+    def create_df(cls, n_rows: int) -> Model:
         factory_cols = cls.get_columns()
         cls.validate_columns(factory_cols)
-        rows = [{k: v.evaluate() for k, v in factory_cols.items()} for _ in range(n_rows)]
+
+        ex = cls.get_execution_strategy()
+
+        rows = ex.execute(
+            iterations=n_rows,
+            func=cls.generate_one_row
+        )
+
         return cls.Meta.model.from_dict(rows)
