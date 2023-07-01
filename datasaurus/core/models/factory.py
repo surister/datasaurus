@@ -40,3 +40,10 @@ class ModelFactory:
             )
 
         return rows
+
+    @classmethod
+    def create_df(cls, n_rows: int):
+        factory_cols = cls.get_columns()
+        cls.validate_columns(factory_cols)
+        rows = [{k: v.evaluate() for k, v in factory_cols.items()} for _ in range(n_rows)]
+        return cls.Meta.model.from_dict(rows)

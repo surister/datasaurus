@@ -24,13 +24,13 @@
 - [x] Add more options to Columns depending on the column Type, like 'unique',  'column_name'
 - [x] Make read/write operations to respect Fields options, like 'column_name'
 - [x] Create factory for models (like factory-boy + faker)
+- [x] Make factory be able to create dataframe as well
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
 - [ ] Change _from_dict constructor into something more generic such as _from_data
 - [ ] [Bug] When you create a df from_dict, if you access to model.df twice, the second time raises and error
 - [ ] Cannot write from one mixin to another (create df from one storage and save it to another if it's of different type)
-- [ ] Make factory be able to create dataframe as well
 - [ ] Give the ability to factory to use multiprocessing to create larges amount of data quick
 - [ ] Create unit tests for factory (once the three above are done) 
 
