@@ -2,6 +2,7 @@ import os
 from abc import ABC, abstractmethod
 from typing import Callable, List, Dict
 
+from datasaurus.core.loggers import datasaurus_logger
 from datasaurus.core.models import Model
 from datasaurus.core.models.columns import Column, Columns
 
@@ -25,11 +26,13 @@ class ExecutionStrategy(ABC):
 
 class PythonNormal(ExecutionStrategy):
     """Normal Python loop execution"""
+
     def execute(self, iterations: int, func: Callable, **extra_options):
         return [func() for _ in range(iterations)]
 
 
 class PythonMultiprocessing(ExecutionStrategy):
+    MP_THRESHOLD = 10_000
     """
     Python multiprocessing execution, processes and chunk_size can be tweaked.
 
@@ -41,7 +44,14 @@ class PythonMultiprocessing(ExecutionStrategy):
     chunk_size : int
         The approximate amount of chunks that the iterable will be chopped into and passed
         into the process to execute.
-
+    
+    Notes
+    -----
+    Using multiprocessing for low amounts of iterations has a negative impact in performance,
+    since the overhead is bigger than the time saved. 
+    
+    That's why there is MP_THRESHOLD, while its value might not actually be the point
+    where multiprocessing makes computationally sense it is at least a start to mitigate the issue.
     """
 
     def __init__(self, processes: int = None, chunk_size: int = None):
@@ -58,7 +68,8 @@ class PythonMultiprocessing(ExecutionStrategy):
         n : int
             The total amount of iterations.
         """
-        return n // os.cpu_count()
+
+        return n // os.cpu_count() if n > self.MP_THRESHOLD else 1
 
     def execute(self, iterations: int, func: Callable, **extra_options):
         def _parallelize_obj_creation(n, func):
@@ -68,6 +79,12 @@ class PythonMultiprocessing(ExecutionStrategy):
                 return list(res)
 
         return _parallelize_obj_creation(iterations, func)
+
+    def __repr__(self):
+        return f'{self.__class__.__qualname__}(processes={self.processes})'
+
+    def __str__(self):
+        return f'{self.__class__.__qualname__}(processes={self.processes})'
 
 
 class ModelFactory:
@@ -113,10 +130,13 @@ class ModelFactory:
 
     @classmethod
     def create_df(cls, n_rows: int) -> Model:
+        datasaurus_logger.debug(f'Creating df for model {cls.Meta.model}')
         factory_cols = cls.get_columns()
         cls.validate_columns(factory_cols)
 
         ex = cls.get_execution_strategy()
+
+        datasaurus_logger.debug(f'Execution strategy will be {ex}')
 
         rows = ex.execute(
             iterations=n_rows,
