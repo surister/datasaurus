@@ -32,6 +32,7 @@ azure-identity = "^1.13.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
 flake8 = "^6.0.0"
+coverage = "^7.2.7"
 
 [tool.poetry.group.mysql.dependencies]
 mysql-connector-python = "^8.0.33"
