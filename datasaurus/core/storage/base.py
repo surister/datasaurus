@@ -80,7 +80,7 @@ class StorageGroup:
         if environment not in cls.environments:
             raise Exception(
                 f"Storage Group '{cls}' does not have environment {environment},"
-                f" declared enviroinmentes are : {cls.environments}")
+                f" declared environments are : {cls.environments}")
         return getattr(cls, environment)
 
     @classproperty
