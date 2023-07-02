@@ -136,22 +136,23 @@ class ModelMeta(type):
         """
         Resolves the appropriate storage and its environment.
 
-        - If no storage is passed, the default storage will be returned (from meta).
-        - If no environment is passed and either the passed storage or the default storage is a
-        StorageGroup, returns the appropriate as per environment variable.
+        storage + env -> storage.storage_group.with_env
+        storage + not env -> storage
 
+        storage_group + env -> storage_group.with_env
+        storage_group + not env -> storage_group.from_env
         """
         storage = storage or cls._meta.storage
-        if not isinstance(storage, Storage):
-            if StorageGroup in storage.__bases__ and len(storage.__bases__) == 1:
-                # If we use Model.save(to=Storage) instead of Storage.from_env
-                # or Storage.environment directly when passing the storage,
-                # we'd receive a StorageGroup instead of a Storage, by default
-                # return StorageGroup.from_env
-                storage = storage.from_env
 
-        if environment:
-            storage = storage.storage_group.with_env(environment)
+        if isinstance(storage, Storage):
+            if environment:
+                storage = storage.storage_group.with_env(environment)
+
+        else:
+            if environment:
+                storage = storage.with_env(environment)
+            else:
+                storage = storage.from_env()
 
         return storage
 
