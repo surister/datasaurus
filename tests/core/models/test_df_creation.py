@@ -13,7 +13,7 @@ The Model can create the dataframe from three different sources:
 """
 
 
-def test_df_creation_from_storage(model_with_local_data):
+def test_df_creation_from_storage(model_class_with_local_data):
     # Todo Break this into smaller tests, per cases.
     """
     3. Data from Storage - Storage
@@ -21,8 +21,8 @@ def test_df_creation_from_storage(model_with_local_data):
     import os
     os.environ['DATASAURUS_ENVIRONMENT'] = 'local'
 
-    model = model_with_local_data
-    default_meta = copy.copy(model_with_local_data._meta)
+    model = model_class_with_local_data
+    default_meta = copy.copy(model_class_with_local_data._meta)
 
     def reset_meta(model):
         model._meta = copy.copy(default_meta)
