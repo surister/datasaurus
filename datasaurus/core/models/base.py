@@ -131,7 +131,7 @@ class ModelMeta(type):
         setattr(cls, '_meta', opts)
         setattr(cls, 'df', lazy_func(cls._get_df))
 
-    def _get_storage_or_default(cls, storage: Optional[Union[Storage, StorageGroup]],
+    def _get_storage_or_default(cls, storage: Optional[Union[Storage, type(StorageGroup)]],
                                 environment: Optional[str] = None) -> Storage:
         """
         Resolves the appropriate storage and its environment.
@@ -143,7 +143,6 @@ class ModelMeta(type):
         storage_group + not env -> storage_group.from_env
         """
         storage = storage or cls._meta.storage
-
         if isinstance(storage, Storage):
             if environment:
                 storage = storage.storage_group.with_env(environment)
@@ -152,7 +151,7 @@ class ModelMeta(type):
             if environment:
                 storage = storage.with_env(environment)
             else:
-                storage = storage.from_env()
+                storage = storage.from_env
 
         return storage
 
