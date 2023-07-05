@@ -1,4 +1,5 @@
 from collections.abc import Collection
+from functools import partial
 from typing import Optional, List, Dict
 
 import polars
@@ -21,7 +22,7 @@ class Column:
     def __init__(self,
                  name: Optional[str] = None,
                  enforce_dtype: bool = True,
-                 dtype: Optional[polars.DataType] = None,
+                 dtype: Optional[type(polars.DataType)] = None,
                  unique: bool = False,
                  *args,
                  **kwargs):
@@ -86,9 +87,11 @@ class Column:
         Note
         ----
         This function should only be used after the dataframe is already loaded, since
-        its depends on a current data type to perform certain casting validations.
+        its depends on a current data type to perform certain casting validations or to get
+        the proper casting strategy from the cast map.
         """
         cast_map = self.get_cast_map(self.cast_map)
+
         col = polars.col(self.get_column_name())
 
         target_dtype = self.dtype or self.default_dtype
@@ -182,7 +185,8 @@ class Columns(Collection):
             if all(map(lambda at: getattr(column, at[0]) == at[1], attr.items()))
         ]
 
-    def get_df_columns_polars(self, current_dtypes: Dict[ColumnName, polars.DataType]) -> List[polars.Expr]:
+    def get_df_columns_polars(self, current_dtypes: Dict[ColumnName, polars.DataType]) -> List[
+        polars.Expr]:
         """Returns a list of the columns with the proper dtypes casts applied"""
         return [
             column.get_col_with_dtype(current_dtypes[column.get_column_name()])
@@ -233,13 +237,14 @@ class DateTimeColumn(Column):
     supported_dtypes = [polars.Datetime, ]
     default_dtype = polars.Datetime
 
-    def __init__(self, format: str = '%Y-%m-%dT%H:%M:%SZ', *args, **kwargs):
+    def __init__(self, format: str = '%Y-%m-%dT%H:%M:%SZ', utc: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.format = format
+        self.utc = utc
 
     def get_cast_map(self, cast_map):
         return {
-            polars.Utf8: lambda col: col.str.to_datetime(self.format)
+            polars.Utf8: lambda col: col.str.to_datetime(format=self.format, utc=self.utc)
         }
 
 
