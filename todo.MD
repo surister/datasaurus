@@ -36,6 +36,9 @@
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
 - [ ] Cannot write from one mixin to another (create df from one storage and save it to another if it's of different type)
 - [ ] Create unit tests for factory (once the three above are done) 
+- [ ] Model: 'missing_columns' could accept columns like this:
+df.columns: ['col1', 'col2', 'col3'], models: ['col1', 'col2'] because there will be times when if the source data 
+has too many columns, and we just don't want to write them.
 
 # Columns
 - [ ] Add unit tests for enforce_dtype
@@ -47,15 +50,27 @@
 - [ ] Change string SQL queries to something that build SQL queries safely.
 - [ ] Unit test dataframe creation (3)
 - [ ] Add support for ndjson format
+- [ ] From storages, change 'environment init param' into 'environment_name' for better clarity
 - [ ] Investigate and choose the default mysql/mariadb driver https://docs.sqlalchemy.org/en/20/dialects/mysql.html (mysqlclient can be used)
 to read but not to write.
+- [ ] Add support to read/write compressed files like gz/zip ..etc
 
 # General Stuff
 - [ ] Create custom exceptions, we are currently using Exception and ValueError in many places. 
 - [ ] Add CI pipeline with unittests and linting.
 - [ ] Investigate a pattern for ETL/Pipeline creation
 - [ ] Investigate how are we going to manage dependencies between models
-- [ ] Perhaps recalculate = 'Always', 'Once', 'If not storage data' where 'if not storage data' is default could be interesting for entities
+- [ ] Perhaps recalculate = 'Always', 'Once', 'If not storage data' where 'if not storage data' is default could be interesting for entities flow
+- [ ] Add more debugging logs
+- [ ] Add header to debug logs, ex: 
+datasaurus - DEBUG - [ModelFactory] Execution strategy will be PythonMultiprocessing(processes=24)
+datasaurus - DEBUG - [ModelIO] Trying to read Model from storage {storageinfo}
+datasaurus - DEBUG - [StorageIO] Executing SQL {...} to see if table exists
+- [ ] Make columns importable from datasaurus.core.models
+
+# Things where unittests are missing
+- [ ] Unit test model inheritance.
+
 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
