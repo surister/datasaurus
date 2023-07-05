@@ -69,7 +69,7 @@ class LocalStorageOperationsMixin(StorageOperationMixinBase):
     needs_format = True
 
     def file_exists(self, file_name, format: FileFormat) -> bool:
-        return pathlib.Path(f'{self.get_uri()}/{file_name}.{format.name}').exists()
+        return (pathlib.Path(self.path) / file_name).with_suffix(suffix=format.suffix).exists()
 
     def write_file(self, df: pl.DataFrame, file_name: str, format: FileFormat, **kwargs):
         full_path = (pathlib.Path(self.path) / file_name).with_suffix(suffix=format.suffix)
