@@ -124,7 +124,7 @@ class ModelMeta(type):
     def _prepare(cls):
         meta = getattr(cls, 'Meta', None)
         if not meta:
-            raise MissingMetaError(f'Model {cls} does not have Meta')
+            raise MissingMetaError(f'Model {cls} does not have Meta class')
 
         opts = Options(meta, cls)
 
@@ -235,27 +235,60 @@ class ModelMeta(type):
 
     def _get_df(cls, storage: Optional[Union[Storage, StorageGroup]] = None):
         """
-        Applies schema validation (dtypes), data validations and options to the newly created dataframe.
+        Applies several options/modifications to the newly created dataframe (in order) as per
+        defined in the Model's columns:
+         - Column creation
+         - Column options (such as auto_select)
+         - Column validation
+         - Column datatype casting.
+         - Column filtering
+
+
+         Parameters
+         ----------
+         storage : Storage, StorageGroup, None
+            The storage that will be used to get the dataframe from. If the received object is
+            a Storage, it will be used, if it's a StorageGroup, the storage will be gotten from
+            the environment, if none the default from class Meta will be used.
+
+         Notes
+         -----
+         The order is important, specially with column creation and validation, since if we try
+         to validate BEFORE the column creation, we can have 'missing columns'
+
         """
         df = cls._create_df(storage=storage)
 
+        # Column creation.
+        auto_add_id_columns = cls._meta.columns.get_df_column_names_by_attrs(auto_add_id=True)
+        if auto_add_id_columns:
+            for col in auto_add_id_columns:
+                df = df.with_columns(
+                    df.with_row_count(col)
+                )
+
+        # Column options from meta.
         if cls._meta.auto_select:
             df = df.select(cls._meta.columns.get_df_column_names())
 
+        # Column validation.
         columns_from_df = frozenset(df.columns)
-        missing_columns = columns_from_df.difference(cls._meta.columns.get_df_column_names())
+        missing_columns = columns_from_df.difference(
+            cls._meta.columns.get_df_column_names()
+        )
 
         if missing_columns:
             raise ValueError(
-                f"Dataframe columns do not match. df.columns: {df.columns},"
+                f"Dataframe columns do not match. {missing_columns} df.columns: {df.columns},"
                 f" models: {cls._meta.columns.get_df_column_names()}"
             )
 
+        # Column dtype casting.
         columns_with_dtypes = cls._meta.columns.get_df_columns_polars(df.schema)
-        unique_columns = cls._meta.columns.get_df_column_names_by_attrs(unique=True)
-
         df = df.with_columns(columns_with_dtypes)
 
+        # Column filtering.
+        unique_columns = cls._meta.columns.get_df_column_names_by_attrs(unique=True)
         if unique_columns:
             df = df.unique(unique_columns)
 
