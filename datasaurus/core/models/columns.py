@@ -182,7 +182,7 @@ class Columns(Collection):
             for column in self._columns
             # Don't despair, this sexy but bad one-liner just checks that all attrs exists
             # with a given value in a column.
-            if all(map(lambda at: getattr(column, at[0]) == at[1], attr.items()))
+            if all(map(lambda at: getattr(column, at[0], False) == at[1], attr.items()))
         ]
 
     def get_df_columns_polars(self, current_dtypes: Dict[ColumnName, polars.DataType]) -> List[
@@ -226,6 +226,10 @@ class IntegerColumn(Column):
     supported_dtypes = [polars.UInt8, polars.UInt16, polars.UInt32, polars.UInt64, polars.Int8,
                         polars.Int16, polars.Int32, polars.Int64]
     default_dtype = polars.Int32
+
+    def __init__(self, auto_add_id: bool = False, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.auto_add_id = auto_add_id
 
 
 class FloatColumn(Column):
