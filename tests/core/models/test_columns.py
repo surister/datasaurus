@@ -136,8 +136,53 @@ def test_columns_unique_attribute():
     ]
 
     model = DummyModel.from_data(
-       data_with_duplicates
+        data_with_duplicates
     )
 
     # assert model._meta.columns.get_df_column_names_by_attrs(unique=True) == ['col1', 'col2']
     # assert model.df.to_dicts() == data_without_duplicates
+
+
+def test_columns_order_doesnt_matter():
+    """
+    We check that the order of the columns do not matter to column validations as intended.
+
+    """
+
+    class DummyModel(Model):
+        col1 = IntegerColumn()
+        col2 = StringColumn()
+
+        class Meta:
+            ...
+
+    DummyModel.from_data(
+        {
+            'col2': [1, 2, 3, 4],
+            'col1': [1, 2, 3, 4],
+
+        }
+    ).df
+
+    DummyModel.from_data(
+        {
+
+            'col1': [1, 2, 3, 4],
+            'col2': [1, 2, 3, 4],
+
+        }
+    ).df
+
+
+def test_columns_auto_add_id_attribute():
+    class DummyModel(Model):
+        col1 = IntegerColumn(auto_add_id=True)
+        col2 = StringColumn()
+
+        class Meta:
+            ...
+
+    df = DummyModel.from_data({'col2': ['data1', 'data2', 'data3', 'data4']}).df
+
+    assert 'col1' in df.columns
+    assert df['col1'].to_list() == [0, 1, 2, 3]
