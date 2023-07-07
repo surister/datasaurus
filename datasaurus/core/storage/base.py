@@ -1,6 +1,6 @@
 import os
 from abc import abstractmethod, ABC
-from typing import Union
+from typing import Union, Optional
 
 import polars
 
@@ -42,11 +42,11 @@ class Storage(ABC):
         ...
 
     @abstractmethod
-    def file_exists(self, file_name) -> bool:
+    def file_exists(self, file_name, format: Optional[DataFormat]) -> bool:
         pass
 
     @abstractmethod
-    def write_file(self, data, file_name, format, **kwargs) -> None:
+    def write_file(self, data, file_name, format: Optional[DataFormat], **kwargs) -> None:
         pass
 
     def supports_format(self, format: DataFormat):
