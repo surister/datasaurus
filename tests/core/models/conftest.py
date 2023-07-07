@@ -61,8 +61,10 @@ def model_class_with_local_data():
         class Meta:
             table_name = 'test_model'
             storage = TestStorage
+            format = FileFormat.JSON
             # There is no format on purpose because the tests this is used in
             # overrides/tests different formats.
+
     return TestModel
 
 

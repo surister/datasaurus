@@ -1,7 +1,9 @@
 import copy
+import json
 
 import pytest
 
+from datasaurus import set_global_env
 from datasaurus.core.models.exceptions import FormatNeededError
 from datasaurus.core.storage.format import FileFormat
 
@@ -11,6 +13,45 @@ The Model can create the dataframe from three different sources:
         2. Data from calculation - Model.calculate_data()
         3. Data from Storage - Storage
 """
+
+def test_df_creation_missing_columns(model_class_with_local_data):
+    """
+    We test that we allow model to have columns [a, b] and the origin df to be [a, b, c]
+    (the final df will be [a, b] because of auto select)
+
+    But we don't allow for: columns [a, b] and the origin df to be [b, c, d] we are missing 'a'
+    """
+    set_global_env('local')
+    path = model_class_with_local_data._meta.storage.from_env.get_uri()
+
+    model_class_with_local_data.df
+
+    with open(f'{path}/test_model.json', 'w') as f:
+        f.write(
+            json.dumps(
+                {
+                    "columns": [
+                        {"name": "col1", "datatype": "Utf8", "values": ['a', 'b', 'c', 'd']},
+                    ]
+                }
+            )
+        )
+    with pytest.raises(ValueError):
+        model_class_with_local_data.df
+
+    with open(f'{path}/test_model.json', 'w') as f:
+        f.write(
+            json.dumps(
+                {
+                    "columns": [
+                        {"name": "col1", "datatype": "Utf8", "values": ['a', 'b', 'c', 'd']},
+                        {"name": "col2", "datatype": "Int64", "values": [1, 2, 3, 4]},
+                        {"name": "col3", "datatype": "Int8", "values": [1, 2, 3, 4]},
+                    ]
+                }
+            )
+        )
+    model_class_with_local_data.df
 
 
 def test_df_creation_from_storage(model_class_with_local_data):
@@ -42,6 +83,7 @@ def test_df_creation_from_storage(model_class_with_local_data):
     reset_meta(model)
 
     # Case 3: no format is given, can be inferred from table_name, but it does not exist.
+    model._meta.format = None
     model._meta.table_name += '.csv'
     with pytest.raises(ValueError):
         model.df
