@@ -76,6 +76,7 @@ datasaurus - DEBUG - [StorageIO] Executing SQL {...} to see if table exists
 - [ ] Support Azure blob storage read/write
 - [ ] Create utility that can give you Model code from inferred data like django inspectdb
 - [ ] Utility that creates diagram of entity dependencies
+- [ ] Unit tests features like chispa
 
 # For the future
 - [ ] Support delta tables
