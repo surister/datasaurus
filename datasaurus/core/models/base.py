@@ -26,6 +26,10 @@ class lazy_func:
         return self.func()
 
 
+# Recalculate
+# if not stored data.
+# always
+
 class Options:
     supported_opts_from_meta = [
         'storage',
@@ -33,7 +37,7 @@ class Options:
         'auto_select',
         'recalculate',
         'format',
-        'columns',
+        'columns'
     ]
 
     def __init__(self, meta, model):
@@ -44,7 +48,7 @@ class Options:
         self.storage = None
         self.table_name = ''
         self.auto_select = False
-        self.recalculate = False
+        self.recalculate = 'if_not_data_in_storage'
         self.format = None
 
         # Options from model
@@ -191,8 +195,32 @@ class ModelMeta(type):
             del cls._schema
             cls._data_from_cls = None
             cls._schema = None
+            return df
 
-        elif cls._meta.recalculate:
+        storage = cls._get_storage_or_default(storage)
+        format = cls._get_format_or_default()
+
+        if isinstance(format, str):
+            format = storage.supported_formats[format]
+
+        if format and not storage.supports_format(format):
+            raise ValueError(
+                f"Storage of type '{type(storage)}' does not support format '{format}',"
+                f" supported formats by this storage are '{storage.supported_formats}'"
+            )
+
+        if storage.needs_format and not format:
+            raise FormatNeededError(
+                f"Cannot create Dataframe because storage of type '{type(storage)}'"
+                " needs a format and it was not provided in the Meta class or it could"
+                " not be inferred from the table_name attribute. To fix this add format "
+                " in the Model's Meta class or an extension to the table_name"
+            )
+
+        if cls._meta.recalculate == 'always' or (
+                cls._meta.recalculate == 'if_not_data_in_storage' and not storage.file_exists(
+                cls._meta.table_name, format)
+        ):
             try:
                 df = cls.calculate_data(cls)
 
@@ -207,26 +235,6 @@ class ModelMeta(type):
                     f'Function calculate_data has to return a polars Dataframe, not a {type(df)}')
 
         else:
-            storage = cls._get_storage_or_default(storage)
-            format = cls._get_format_or_default()
-
-            if isinstance(format, str):
-                format = storage.supported_formats[format]
-
-            if format and not storage.supports_format(format):
-                raise ValueError(
-                    f"Storage of type '{type(storage)}' does not support format '{format}',"
-                    f" supported formats by this storage are '{storage.supported_formats}'"
-                )
-
-            if storage.needs_format and not format:
-                raise FormatNeededError(
-                    f"Cannot create Dataframe because storage of type '{type(storage)}'"
-                    " needs a format and it was not provided in the Meta class or it could"
-                    " not be inferred from the table_name attribute. To fix this add format "
-                    " in the Model's Meta class or an extension to the table_name"
-                )
-
             df = storage.read_file(cls._meta.table_name,
                                    cls._meta.columns.get_df_column_names(),
                                    format=format)
@@ -267,14 +275,11 @@ class ModelMeta(type):
                     df.with_row_count(col)
                 )
 
-        # Column options from meta.
-        if cls._meta.auto_select:
-            df = df.select(cls._meta.columns.get_df_column_names())
-
         # Column validation.
-        columns_from_df = frozenset(df.columns)
-        missing_columns = columns_from_df.difference(
-            cls._meta.columns.get_df_column_names()
+        columns_from_model = frozenset(cls._meta.columns.get_df_column_names())
+
+        missing_columns = columns_from_model.difference(
+            df.columns
         )
 
         if missing_columns:
@@ -291,6 +296,8 @@ class ModelMeta(type):
         unique_columns = cls._meta.columns.get_df_column_names_by_attrs(unique=True)
         if unique_columns:
             df = df.unique(unique_columns)
+
+        df = df.select(cls._meta.columns.get_df_column_names())
 
         return df
 
