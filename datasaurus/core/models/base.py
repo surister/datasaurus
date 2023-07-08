@@ -34,7 +34,6 @@ class Options:
     supported_opts_from_meta = [
         'storage',
         'table_name',
-        'auto_select',
         'recalculate',
         'format',
         'columns'
@@ -47,7 +46,6 @@ class Options:
         # Options from meta
         self.storage = None
         self.table_name = ''
-        self.auto_select = False
         self.recalculate = 'if_not_data_in_storage'
         self.format = None
 
@@ -246,7 +244,7 @@ class ModelMeta(type):
         Applies several options/modifications to the newly created dataframe (in order) as per
         defined in the Model's columns:
          - Column creation
-         - Column options (such as auto_select)
+         - Column options
          - Column validation
          - Column datatype casting.
          - Column filtering
@@ -267,13 +265,19 @@ class ModelMeta(type):
         """
         df = cls._create_df(storage=storage)
 
+        # Column filtering.
+        unique_columns = cls._meta.columns.get_df_column_names_by_attrs(unique=True)
+        if unique_columns:
+            df = df.unique(unique_columns)
+
         # Column creation.
         auto_add_id_columns = cls._meta.columns.get_df_column_names_by_attrs(auto_add_id=True)
         if auto_add_id_columns:
             for col in auto_add_id_columns:
-                df = df.with_columns(
-                    df.with_row_count(col)
-                )
+                if col not in df.columns:
+                    df = df.with_columns(
+                        df.with_row_count(col)
+                    )
 
         # Column validation.
         columns_from_model = frozenset(cls._meta.columns.get_df_column_names())
@@ -291,11 +295,6 @@ class ModelMeta(type):
         # Column dtype casting.
         columns_with_dtypes = cls._meta.columns.get_df_columns_polars(df.schema)
         df = df.with_columns(columns_with_dtypes)
-
-        # Column filtering.
-        unique_columns = cls._meta.columns.get_df_column_names_by_attrs(unique=True)
-        if unique_columns:
-            df = df.unique(unique_columns)
 
         df = df.select(cls._meta.columns.get_df_column_names())
 
