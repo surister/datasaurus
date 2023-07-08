@@ -5,7 +5,7 @@
 - [x] Come up with new pattern for storage uri + readdf + write+df abstraction, probably a mixin
   could do: since most SQL databases will share the same mixin
 - [x] Fix how uri is generated
-- [x] Make it so we can store newly generated data in different storage
+- [x] Make it so we can store newly generated data in different storages
 - [x] Investigate whether ModelBase metaclass' function columns, calculate_data, exists,
   ~~ensure_exists~~ ...etc should be out of the metaclass
 - [x] Allow for a model df to be created from a dictionary
@@ -18,7 +18,7 @@
 - [x] Improve Model.save api: allow always for environment (as string) override.
 - [x] Add mysql support
 - [x] Add column_name option to Columns
-- [x] Add data types enforcement / casting from the Columns objects
+- [x] Add data types enforcement / casting from the Columns
 - [x] Add more fields types
 - [x] Change everything to `columns` (We now use the words fields/columns in several parts of the code)
 - [x] Add more options to Columns depending on the column Type, like 'unique',  'column_name'
@@ -31,26 +31,26 @@
 - [x] [Bug] When you create a df from_dict, if you access to model.df twice, the second time raises
   and error (not a bug, its expected behaviour)
 - [x] Make Model.from_dict constructor raise exception when None is passed
+- [x] Add auto_id_add
+- [x] Perhaps recalculate = 'Always', 'Once', 'If not storage data' where 'if not storage data' is default could be interesting for entities flow
+- [x] From storages, change 'environment init param' into 'environment_name' for better clarity
+- [x] Model: 'missing_columns' could accept columns like this:
+df.columns: ['col1', 'col2', 'col3'], models: ['col1', 'col2'] because there will be times when if the source data 
+has too many columns, and we just don't want to write them.
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
 - [ ] Cannot write from one mixin to another (create df from one storage and save it to another if it's of different type)
 - [ ] Create unit tests for factory (once the three above are done) 
-- [ ] Model: 'missing_columns' could accept columns like this:
-df.columns: ['col1', 'col2', 'col3'], models: ['col1', 'col2'] because there will be times when if the source data 
-has too many columns, and we just don't want to write them.
 
 # Columns
-- [ ] Add unit tests for enforce_dtype
 - [ ] If auto_id_add is added, see how to add another option, ex: 'default' so we can pass stuff like lambda x: uuid4
-- [ ] Add auto_id_add
 
 # Storages + IO
 - [ ] Add save modes such as: append, overwrite, 'delta'?
 - [ ] Change string SQL queries to something that build SQL queries safely.
-- [ ] Unit test dataframe creation (3)
 - [ ] Add support for ndjson format
-- [ ] From storages, change 'environment init param' into 'environment_name' for better clarity
+
 - [ ] Investigate and choose the default mysql/mariadb driver https://docs.sqlalchemy.org/en/20/dialects/mysql.html (mysqlclient can be used)
 to read but not to write.
 - [ ] Add support to read/write compressed files like gz/zip ..etc
@@ -60,7 +60,6 @@ to read but not to write.
 - [ ] Add CI pipeline with unittests and linting.
 - [ ] Investigate a pattern for ETL/Pipeline creation
 - [ ] Investigate how are we going to manage dependencies between models
-- [ ] Perhaps recalculate = 'Always', 'Once', 'If not storage data' where 'if not storage data' is default could be interesting for entities flow
 - [ ] Add more debugging logs
 - [ ] Add header to debug logs, ex: 
 datasaurus - DEBUG - [ModelFactory] Execution strategy will be PythonMultiprocessing(processes=24)
@@ -70,7 +69,8 @@ datasaurus - DEBUG - [StorageIO] Executing SQL {...} to see if table exists
 
 # Things where unittests are missing
 - [ ] Unit test model inheritance.
-
+- [ ] Add unit tests for enforce_dtype
+- [ ] Unit test dataframe creation (1)
 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
