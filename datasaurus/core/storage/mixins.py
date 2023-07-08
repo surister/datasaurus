@@ -84,7 +84,7 @@ class LocalStorageOperationsMixin(StorageOperationMixinBase):
         full_path = (pathlib.Path(self.path) / file_name).with_suffix(format.suffix)
 
         if not full_path.exists():
-            raise ValueError(f"Cannot find '{full_path}'")
+            raise ValueError(f"Trying to read from '{full_path}' but file does not exist")
 
         _read_func = getattr(pl, f'read_{format.name}')
 
