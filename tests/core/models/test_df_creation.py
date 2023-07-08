@@ -1,6 +1,8 @@
 import copy
 import json
 
+import polars
+from polars import testing
 import pytest
 
 from datasaurus import set_global_env
@@ -13,6 +15,41 @@ The Model can create the dataframe from three different sources:
         2. Data from calculation - Model.calculate_data()
         3. Data from Storage - Storage
 """
+
+
+def test_df_creation_from_calculation(model_class_without_local_data):
+    """
+    Test recalculate = 'if_not_data_in_storage', 'always' and 'never'
+    """
+    set_global_env('local')
+    expected_df = polars.DataFrame({"col1": [1, 2], "col2": [3, 4]},
+                                   schema={'col1': polars.Utf8, 'col2': polars.Int32}
+                                   )
+
+    expected_data = {"col1": ['1', '6'], "col2": [3, 5]}
+
+    class FooModel(model_class_without_local_data):
+        def calculate_data(self):
+            return expected_df
+
+    FooModel._meta.recalculate = 'never'
+    with pytest.raises(ValueError):
+        polars.testing.assert_frame_equal(FooModel.df, model_class_without_local_data.df)
+
+    FooModel._meta.recalculate = 'always'
+    polars.testing.assert_frame_equal(FooModel.df, expected_df)
+
+    FooModel._meta.recalculate = 'if_not_data_in_storage'
+    polars.testing.assert_frame_equal(FooModel.df, expected_df)
+
+    FooModel.from_data(expected_data)
+    FooModel.save()
+    polars.testing.assert_frame_equal(FooModel.df,
+                                      polars.DataFrame(expected_data,
+                                                       schema={'col1': polars.Utf8,
+                                                               'col2': polars.Int32}),
+                                      check_dtype=False)
+
 
 def test_df_creation_missing_columns(model_class_with_local_data):
     """

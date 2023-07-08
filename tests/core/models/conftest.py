@@ -35,6 +35,27 @@ def model_class_dummy():
 
 
 @pytest.fixture
+def model_class_without_local_data():
+    tmp_dir = create_tmp_dir()
+
+    class TestStorage(StorageGroup):
+        local = LocalStorage(path=tmp_dir)
+
+    class TestModel(Model):
+        col1 = StringColumn()
+        col2 = IntegerColumn()
+
+        class Meta:
+            table_name = 'test_model'
+            storage = TestStorage
+            format = FileFormat.JSON
+            # There is no format on purpose because the tests this is used in
+            # overrides/tests different formats.
+
+    return TestModel
+
+
+@pytest.fixture
 def model_class_with_local_data():
     tmp_dir = create_tmp_dir()
 
