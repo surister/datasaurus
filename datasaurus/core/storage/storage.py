@@ -39,8 +39,8 @@ class Uri:
 
 
 class LocalStorage(LocalStorageOperationsMixin, Storage):
-    def __init__(self, path: str, name: str = '', environment: str = AUTO_RESOLVE):
-        super().__init__(name, environment)
+    def __init__(self, path: str, name: str = '', environment_name: str = AUTO_RESOLVE):
+        super().__init__(name, environment_name)
         self.path = path
 
     def get_uri(self):
@@ -48,8 +48,8 @@ class LocalStorage(LocalStorageOperationsMixin, Storage):
 
 
 class SqliteStorage(SQLStorageOperationsMixin, Storage):
-    def __init__(self, path: str, name: str = '', environment: str = AUTO_RESOLVE):
-        super().__init__(name, environment)
+    def __init__(self, path: str, name: str = '', environment_name: str = AUTO_RESOLVE):
+        super().__init__(name, environment_name)
         self.path = path
 
     def get_uri(self) -> str:
@@ -64,8 +64,8 @@ class MariadbStorage(SQLStorageOperationsMixin, Storage):
                  database: str,
                  port: str = '3306',
                  storage_name: str = '',
-                 environment: str = AUTO_RESOLVE):
-        super().__init__(storage_name, environment)
+                 environment_name: str = AUTO_RESOLVE):
+        super().__init__(storage_name, environment_name)
 
         self.username = username
         self.password = password
@@ -96,8 +96,8 @@ class MysqlStorage(SQLStorageOperationsMixin, Storage):
                  database: str,
                  port: str = '3306',
                  storage_name: str = '',
-                 environment: str = AUTO_RESOLVE):
-        super().__init__(storage_name, environment)
+                 environment_name: str = AUTO_RESOLVE):
+        super().__init__(storage_name, environment_name)
 
         self.username = username
         self.password = password
@@ -130,8 +130,8 @@ class PostgresStorage(SQLStorageOperationsMixin, Storage):
                  database: str,
                  port: str = '5432',
                  storage_name: str = '',
-                 environment: str = AUTO_RESOLVE):
-        super().__init__(storage_name, environment)
+                 environment_name: str = AUTO_RESOLVE):
+        super().__init__(storage_name, environment_name)
 
         self.username = username
         self.password = password

@@ -16,9 +16,9 @@ class AzureBlobStorage(Storage):
                  encoding: str = 'utf-8',
                  container_client=None,
                  name: str = '',
-                 environment: str = AUTO_RESOLVE,
+                 environment_name: str = AUTO_RESOLVE,
                  ):
-        super().__init__(name, environment)
+        super().__init__(name, environment_name)
         self.connect_str = connect_str
         self.container_name = container_name
         self.encoding = encoding

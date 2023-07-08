@@ -28,8 +28,8 @@ class Storage(ABC):
     supported_formats: DataFormat = type('NoFormat', (FormatNotSet,), {})()
     needs_format: bool = False
 
-    def __init__(self, name: str, environment: ENVIRONMENT):
-        self.environment = environment
+    def __init__(self, name: str, environment_name: ENVIRONMENT):
+        self.environment_name = environment_name
         self.name = name
         # Reference to the storage group it belongs
         self.storage_group = None
@@ -57,11 +57,11 @@ class Storage(ABC):
         if not isinstance(owner(), StorageGroup):
             raise Exception('Cannot register')  # Todo refactor exception
 
-        if self.environment == AUTO_RESOLVE:
-            self.environment = name
+        if self.environment_name == AUTO_RESOLVE:
+            self.environment_name = name
 
     def __str__(self):
-        return f'{self.__class__.__qualname__}<environment={self.environment}>'
+        return f'{self.__class__.__qualname__}<environment={self.environment_name}>'
 
 
 class StorageGroup:
@@ -70,7 +70,7 @@ class StorageGroup:
     @property
     def environments(cls):
         return [
-            element.environment
+            element.environment_name
             for element in cls.__dict__.values()
             if isinstance(element, Storage)
         ]
