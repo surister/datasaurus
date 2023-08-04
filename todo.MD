@@ -78,6 +78,7 @@ datasaurus - DEBUG - [StorageIO] Executing SQL {...} to see if table exists
 - [ ] Create utility that can give you Model code from inferred data like django inspectdb
 - [ ] Utility that creates diagram of entity dependencies
 - [ ] Unit tests features like chispa
+- [ ] Automatic data lineage from instrospection from model inheritance, simple model calculate_data and transformation pattern.
 
 # For the future
 - [ ] Support delta tables
