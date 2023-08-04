@@ -37,6 +37,7 @@
 - [x] Model: 'missing_columns' could accept columns like this:
 df.columns: ['col1', 'col2', 'col3'], models: ['col1', 'col2'] because there will be times when if the source data 
 has too many columns, and we just don't want to write them.
+- [x] Remove options in Columns such as 'unique', I tried in a ETL and did not like it at all working with it.
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
@@ -50,9 +51,9 @@ has too many columns, and we just don't want to write them.
 - [ ] Add save modes such as: append, overwrite, 'delta'?
 - [ ] Change string SQL queries to something that build SQL queries safely.
 - [ ] Add support for ndjson format
-
 - [ ] Investigate and choose the default mysql/mariadb driver https://docs.sqlalchemy.org/en/20/dialects/mysql.html (mysqlclient can be used)
 to read but not to write.
+- [ ] Add support for read/write options (?) what did I mean with this???.
 - [ ] Add support to read/write compressed files like gz/zip ..etc
 
 # General Stuff
