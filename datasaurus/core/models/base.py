@@ -224,9 +224,8 @@ class ModelMeta(type):
 
             except NotImplementedError as e:
                 raise ValueError(
-                    'Cannot generate dataframe, do you have recalculate=True in your model while'
-                    ' calculate_data is not defined in the model? If you are trying to create the'
-                    ' dataframe from existing data, set recalculate=False (default)') from e
+                    'Cannot generate dataframe, either no data can be read from storage or '
+                    ' calculate_data is not defined in the model.') from e
 
             if not isinstance(df, DataFrame):
                 raise ValueError(
@@ -268,7 +267,7 @@ class ModelMeta(type):
         # Column filtering.
         unique_columns = cls._meta.columns.get_df_column_names_by_attrs(unique=True)
         if unique_columns:
-            df = df.unique(unique_columns)
+            df = df.unique(unique_columns, maintain_order=True)
 
         # Column creation.
         auto_add_id_columns = cls._meta.columns.get_df_column_names_by_attrs(auto_add_id=True)

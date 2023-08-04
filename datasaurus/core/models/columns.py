@@ -1,5 +1,5 @@
 from collections.abc import Collection
-from functools import partial
+
 from typing import Optional, List, Dict
 
 import polars
@@ -11,7 +11,7 @@ class Column:
     """
     Represents a column.
 
-    # Todo
+    # Todo check typehints and docstrings.
     """
     _override_polars_col = False  # Set only to true in unit tests.
 
@@ -126,9 +126,11 @@ class Column:
 
 class Columns(Collection):
     """
-    Class that represents a group of Columns. Used for column filtering, attribute retrieval
-    and general utils operations.
+    Container for columns. Used for column filtering and general columns operations.
 
+
+    Notes
+    -----
     One `Columns` object per Model is expected but not enforced.
     """
 
