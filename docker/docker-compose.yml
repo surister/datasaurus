@@ -3,6 +3,7 @@
 
 services:
   postgres:
+    restart: unless-stopped
     image: postgres
     environment:
       - POSTGRES_USER=${DATABASE_USER}
@@ -10,6 +11,7 @@ services:
     ports:
       - 5432:5432
   mysql:
+    restart: unless-stopped
     image: mysql
     command: --init-file /data/application/mysql_init.sql
     volumes:
@@ -19,6 +21,7 @@ services:
     ports:
       - 3306:3306
   mariadb:
+    restart: unless-stopped
     image: mariadb
     environment:
       - MARIADB_ROOT_PASSWORD=${DATABASE_PASSWORD}
