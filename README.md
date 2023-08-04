@@ -63,7 +63,7 @@ class ProfileModel(Model):
 
 ```
 
-We can access the raw Polar's dataframe with 'Model.df', it's lazy, meaning it'll only load the
+We can access the raw Polars dataframe with 'Model.df', it's lazy, meaning it will only load the
 data if we access the attribute.
 
 ```py
@@ -109,29 +109,23 @@ class FemaleProfiles(Model):
         )
 
     class Meta:
-        auto_select = True
-        recalculate = True
+        recalculate = 'if_no_data_in_storage'
         storage = ProfilesData
         table_name = 'PROFILE_FEMALES'
 ```
-Et voilá! We can now create new dataframes from other dataframes, 
+Et voilá! the columns will be auto selected from the column definitions (id, profile_id and email).
 
 If we now call:
 ```python
-FemaleProfiles.ensure_exists()
+FemaleProfiles.df
 ```
 
-In this example, by just calling ensure_exists it will:
-1. Check if the table exists in 'dev' (sqlite).
-2. Read ProfileModel from the 'dev' (sqlite).
-3. Calculate the new data (calculate_data).
-4. Validate that the columns of the resulting dataframe matches of the model's (In this case it will auto_select).
-5. Write the table in 'dev' (sqlite), if the table does not exist, it'll create it.
+It will check if the dataframe exists in the storage and if it does not, it will 'calculate' it again
+from calculate_data and save it to the Storage, this parameter can also be set to 'always'.
 
-You can even move data to different environments or storages, making it easy to change formats or
-move data around.
 
-You could for example call:
+You can also move data to different environments or storages, making it easy to change formats or
+move data around:
 
 ```python
 FemaleProfiles.save(to=ProfilesData.live)
@@ -145,5 +139,3 @@ FemaleProfiles.save(to=ProfilesData.otherenvironment, format=LocalFormat.JSON)
 FemaleProfiles.save(to=ProfilesData.otherenvironment, format=LocalFormat.CSV)
 FemaleProfiles.save(to=ProfilesData.otherenvironment, format=LocalFormat.PARQUET)
 ```
-
-
