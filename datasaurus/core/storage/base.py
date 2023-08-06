@@ -101,7 +101,11 @@ class StorageGroup:
         service_env_key = os.getenv(f'{cls.__name__}_ENVIRONMENT')
 
         if env_key := datasaurus_env_key or service_env_key:
-            return getattr(cls, env_key)
+            try:
+                return getattr(cls, env_key)
+            except AttributeError:
+                raise Exception(f"Storage '{cls}' does not have environment '{env_key}'")
+
 
         raise CannotResolveEnvironmentException(
             f'Neither DATASAURUS_ENVIRONMENT nor {cls.__name__}_ENVIRONMENT are defined but '
