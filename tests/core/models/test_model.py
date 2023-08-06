@@ -120,3 +120,42 @@ def test_model_resolves_environments_correctly():
 def test_model_enforces_dtypes(model_class_with_local_data):
     datasaurus.set_global_env('local')
     model_class_with_local_data._meta.format = FileFormat.JSON
+
+
+def test_model_columns_inheritance():
+    class FooModel(Model):
+        col = Column()
+        col2 = Column()
+
+        class Meta:
+            pass
+
+    class BarModel(FooModel):
+        pass
+
+    assert FooModel.columns == BarModel.columns
+
+    class BarModel(Model):
+        col3 = Column()
+        col4 = Column()
+
+        class Meta:
+            pass
+
+    class FooBarModel(FooModel, BarModel):
+        pass
+
+
+    assert FooModel.columns + BarModel.columns == FooBarModel.columns
+
+    class AnotherModel(Model):
+        col = Column()
+
+        class Meta:
+            pass
+
+    # Clashing columns
+    with pytest.raises(ValueError):
+        class FooBarModel(BarModel, FooModel, AnotherModel):
+            pass
+
