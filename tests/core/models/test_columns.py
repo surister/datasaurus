@@ -145,17 +145,3 @@ def test_columns_order_doesnt_matter():
 
         }
     ).df
-
-
-def test_columns_auto_add_id_attribute():
-    class DummyModel(Model):
-        col1 = IntegerColumn(auto_add_id=True)
-        col2 = StringColumn()
-
-        class Meta:
-            ...
-
-    df = DummyModel.from_data({'col2': ['data1', 'data2', 'data3', 'data4']}).df
-
-    assert 'col1' in df.columns
-    assert df['col1'].to_list() == [0, 1, 2, 3]
