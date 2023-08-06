@@ -116,37 +116,10 @@ def test_columns():
     assert columns.get_df_column_names() == ['col_1', 'col_new', 'col_3']
 
 
-def test_columns_unique_attribute():
-    class DummyModel(Model):
-        col1 = StringColumn(unique=True)
-        col2 = StringColumn(unique=True)
-        col3 = IntegerColumn()
-
-        class Meta:
-            ...
-
-    data_with_duplicates = {
-        'col1': ['test1', 'test2', 'test2'],
-        'col2': ['test01', 'test02', 'test02'],
-        'col3': [1, 2, 2]
-    }
-    data_without_duplicates = [
-        {'col1': 'test2', 'col2': 'test02', 'col3': 2},
-        {'col1': 'test1', 'col2': 'test01', 'col3': 1}
-    ]
-
-    model = DummyModel.from_data(
-        data_with_duplicates
-    )
-
-    # assert model._meta.columns.get_df_column_names_by_attrs(unique=True) == ['col1', 'col2']
-    # assert model.df.to_dicts() == data_without_duplicates
-
 
 def test_columns_order_doesnt_matter():
     """
     We check that the order of the columns do not matter to column validations as intended.
-
     """
 
     class DummyModel(Model):

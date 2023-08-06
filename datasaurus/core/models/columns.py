@@ -23,13 +23,11 @@ class Column:
                  name: Optional[str] = None,
                  enforce_dtype: bool = True,
                  dtype: Optional[type(polars.DataType)] = None,
-                 unique: bool = False,
                  *args,
                  **kwargs):
         self.column_name = name
         self.enforce_dtype = enforce_dtype
         self.dtype = dtype
-        self.unique = unique
 
         #  Descriptor variables.
         self.name = None
@@ -178,7 +176,13 @@ class Columns(Collection):
 
             >>> Foo._meta.columns.get_df_column_names_by_attrs(unique=True)
             ['mail', 'ss_number']
+
         """
+
+        #  In the docstring we use the example of 'unique' it was removed 2023-08-06, but this
+        #  function still makes sense, if new attributes to the column gets added, remove this comment
+        #  and docstring.
+
         return [
             column.get_column_name()
             for column in self._columns
@@ -229,9 +233,8 @@ class IntegerColumn(Column):
                         polars.Int16, polars.Int32, polars.Int64]
     default_dtype = polars.Int32
 
-    def __init__(self, auto_add_id: bool = False, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.auto_add_id = auto_add_id
 
 
 class FloatColumn(Column):

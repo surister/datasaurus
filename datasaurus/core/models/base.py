@@ -26,10 +26,6 @@ class lazy_func:
         return self.func()
 
 
-# Recalculate
-# if not stored data.
-# always
-
 class Options:
     supported_opts_from_meta = [
         'storage',
@@ -264,19 +260,6 @@ class ModelMeta(type):
         """
         df = cls._create_df(storage=storage)
 
-        # Column filtering.
-        unique_columns = cls._meta.columns.get_df_column_names_by_attrs(unique=True)
-        if unique_columns:
-            df = df.unique(unique_columns, maintain_order=True)
-
-        # Column creation.
-        auto_add_id_columns = cls._meta.columns.get_df_column_names_by_attrs(auto_add_id=True)
-        if auto_add_id_columns:
-            for col in auto_add_id_columns:
-                if col not in df.columns:
-                    df = df.with_columns(
-                        df.with_row_count(col)
-                    )
 
         # Column validation.
         columns_from_model = frozenset(cls._meta.columns.get_df_column_names())
