@@ -35,7 +35,7 @@ class Options:
         'columns'
     ]
 
-    def __init__(self, meta, model):
+    def __init__(self, *, meta, model):
         self.meta = meta
         self.model = model
 
@@ -65,7 +65,7 @@ class Options:
         new_columns = Columns(new_columns)
 
         # Set columns from base classes (including parents).
-        for base in self.model.mro()[:1]:
+        for base in self.model.mro()[1:]:
             # We ignore the first one because it is itself, otherwise it conflicts.
             if hasattr(base, '_meta'):
                 for column in base._meta.columns:
@@ -124,7 +124,7 @@ class ModelMeta(type):
         if not meta:
             raise MissingMetaError(f'Model {cls} does not have Meta class')
 
-        opts = Options(meta, cls)
+        opts = Options(meta=meta, model=cls)
 
         setattr(cls, '_meta', opts)
         setattr(cls, 'df', lazy_func(cls._get_df))
