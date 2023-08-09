@@ -309,8 +309,9 @@ class Model(metaclass=ModelMeta):
         if not data:
             raise ValueError('Data cannot be None')
 
-        setattr(cls, '_data_from_cls', data)
-        setattr(cls, '_schema', schema)
+        cls._data_from_cls = data
+        cls._schema = schema
+
         return cls
 
     def calculate_data(self) -> 'polars.DataFrame':
