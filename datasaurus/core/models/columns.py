@@ -241,7 +241,7 @@ class StringColumn(Column):
 class IntegerColumn(Column):
     supported_dtypes = [polars.UInt8, polars.UInt16, polars.UInt32, polars.UInt64, polars.Int8,
                         polars.Int16, polars.Int32, polars.Int64]
-    default_dtype = polars.Int32
+    default_dtype = polars.Int64
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
