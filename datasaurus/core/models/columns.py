@@ -9,7 +9,7 @@ ColumnName = str
 
 class Column:
     """
-    Represents a column.
+    Represents a dataframe column.
 
     # Todo check typehints and docstrings.
     """
@@ -182,7 +182,6 @@ class Columns(Collection):
         #  In the docstring we use the example of 'unique' it was removed 2023-08-06, but this
         #  function still makes sense, if new attributes to the column gets added, remove this comment
         #  and docstring.
-
         return [
             column.get_column_name()
             for column in self._columns
@@ -217,6 +216,17 @@ class Columns(Collection):
         """
         return [column.name for column in self._columns]
 
+    def get_schema(self) -> Dict[str, polars.DataType]:
+        return {
+            col.get_column_name(): col.dtype or col.default_dtype for col in self._columns
+        }
+
+    def is_compatible_with_polars_df(self, df: polars.DataFrame, check_dtypes=True):
+        """
+        Returns whether the given dataframe schema is compatible with the columns
+        """
+        schema = self.get_schema()
+        return schema == df.schema if check_dtypes else schema.keys() == df.schema.keys()
 
 class BooleanColumn(Column):
     supported_dtypes = [polars.Boolean]
