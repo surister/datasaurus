@@ -1,3 +1,5 @@
+import datetime
+
 import polars
 import pytest
 
@@ -5,7 +7,6 @@ from datasaurus.core.models import Model
 from datasaurus.core.models.columns import Column, Columns, StringColumn, IntegerColumn, DateColumn
 
 import polars as pl
-
 
 def test_column_as_descriptors():
     """
@@ -98,6 +99,7 @@ def test_columns():
 
     col_1.__set_name__(None, 'col_1')
     col_2.__set_name__(None, 'col_2')
+    col_2.some_attribute = True
 
     columns = Columns([col_1, col_2])
 
@@ -114,7 +116,58 @@ def test_columns():
     assert len(columns) == 3
     assert columns.get_model_columns() == ['col_1', 'col_2', 'col_3']
     assert columns.get_df_column_names() == ['col_1', 'col_new', 'col_3']
+    assert columns.get_df_column_names_by_attrs(some_attribute=True) == ['col_new']
 
+
+def tests_columns_casting():
+    col_1 = StringColumn()
+    col_2 = IntegerColumn(dtype=polars.UInt8)
+    col_1.__set_name__(None, 'col_1')
+    col_2.__set_name__(None, 'col_2')
+
+    columns = Columns([col_1, col_2])
+
+    current_types = {
+        'col_1': polars.Utf8,
+        'col_2': polars.UInt64
+    }
+
+    # We only care that the columns were type cast, not that the type cast was correct.
+    # that's the job of Column.get_col_with_dtype and should be tested somewhere else.
+    assert all(
+        map(
+            lambda col: isinstance(col, polars.expr.expr.Expr),
+            columns.get_df_columns_polars(current_types)
+        )
+    )
+
+
+def test_columns_is_compatible_with_df():
+    col_1 = StringColumn(name='idcol')
+    col_2 = DateColumn()
+    col_3 = IntegerColumn()
+
+    col_1.__set_name__(None, 'col_1')
+    col_2.__set_name__(None, 'col_2')
+    col_3.__set_name__(None, 'col_3')
+
+    columns = Columns([
+        col_1, col_2, col_3
+    ])
+
+    df = polars.DataFrame(
+        {
+            'idcol': ['1', '2', '3'],
+            'col_2': [datetime.date.today(), None,None],
+            'col_3': [1, 2, 3]
+        }
+    )
+
+    assert columns.is_compatible_with_polars_df(df, check_dtypes=False)
+    assert columns.is_compatible_with_polars_df(df, check_dtypes=True)
+
+    col_1.dtype = polars.UInt8
+    assert not columns.is_compatible_with_polars_df(df, check_dtypes=True)
 
 
 def test_columns_order_doesnt_matter():
