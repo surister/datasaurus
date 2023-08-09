@@ -38,6 +38,7 @@
 df.columns: ['col1', 'col2', 'col3'], models: ['col1', 'col2'] because there will be times when if the source data 
 has too many columns, and we just don't want to write them.
 - [x] Remove options in Columns such as 'unique', I tried in a ETL and did not like it at all working with it.
+- [x] Make columns importable from datasaurus.core.models
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
@@ -45,15 +46,14 @@ has too many columns, and we just don't want to write them.
 - [ ] Create unit tests for factory (once the three above are done) 
 
 # Columns
-- [ ] If auto_id_add is added, see how to add another option, ex: 'default' so we can pass stuff like lambda x: uuid4
+- [ ] Add validations.
 
 # Storages + IO
-- [ ] Add save modes such as: append, overwrite, 'delta'?
 - [ ] Change string SQL queries to something that build SQL queries safely.
 - [ ] Add support for ndjson format
 - [ ] Investigate and choose the default mysql/mariadb driver https://docs.sqlalchemy.org/en/20/dialects/mysql.html (mysqlclient can be used)
 to read but not to write.
-- [ ] Add support for read/write options (?) what did I mean with this???.
+- [ ] Add support to modify read/write options, like Models.with_options(environment=whatever).save() (That'd modify the read from that's defined in Meta)
 - [ ] Add support to read/write compressed files like gz/zip ..etc
 
 # General Stuff
@@ -66,7 +66,6 @@ to read but not to write.
 datasaurus - DEBUG - [ModelFactory] Execution strategy will be PythonMultiprocessing(processes=24)
 datasaurus - DEBUG - [ModelIO] Trying to read Model from storage {storageinfo}
 datasaurus - DEBUG - [StorageIO] Executing SQL {...} to see if table exists
-- [ ] Make columns importable from datasaurus.core.models
 
 # Things where unittests are missing
 - [ ] Unit test model inheritance.
@@ -75,8 +74,8 @@ datasaurus - DEBUG - [StorageIO] Executing SQL {...} to see if table exists
 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
+- [ ] Support S3 storage read/write
 - [ ] Create utility that can give you Model code from inferred data like django inspectdb
-- [ ] Utility that creates diagram of entity dependencies
 - [ ] Unit tests features like chispa
 - [ ] Automatic data lineage from instrospection from model inheritance, simple model calculate_data and transformation pattern.
 
