@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from functools import partial
 from typing import Callable, Optional, Union
 
@@ -26,7 +27,7 @@ class lazy_func:
         return self.func()
 
 
-class Options:
+class ModelMetaOptions:
     supported_opts_from_meta = [
         'storage',
         'table_name',
@@ -49,9 +50,9 @@ class Options:
         self.columns = Columns()
 
         self._populate_from_meta()
-        self._populate_from_model()
+        self._set_up_columns()
 
-    def _populate_from_model(self):
+    def _set_up_columns(self):
         """
         Populates Options values from the given model on the __init__, we also inherit columns from the parent classes
         if they are models.
@@ -101,30 +102,33 @@ class Options:
         return f'{self.__class__.__qualname__}({vars(self)})'
 
 
-class ModelMeta(type):
-    df: DataFrame
-    _meta: Options
-    _data_from_cls: Optional[dict] = None
-
+class PreparedMeta(ABCMeta):
     def __new__(cls, name, bases, attrs, **kwargs):
         super_new = super().__new__
 
         # This beauty here has been 'taken' from django itself, it ensures that only
         # subclasses of ModelBase are initiated.
-        parents = [b for b in bases if isinstance(b, ModelMeta)]
+        parents = [b for b in bases if isinstance(b, PreparedMeta)]
+
         if not parents:
             return super_new(cls, name, bases, attrs)
 
         _new_class = super_new(cls, name, bases, attrs, **kwargs)
         _new_class._prepare()
+
         return _new_class
+
+class ModelMeta(PreparedMeta):
+    df: DataFrame
+    _meta: ModelMetaOptions
+    _data_from_cls: Optional[dict] = None
 
     def _prepare(cls):
         meta = getattr(cls, 'Meta', None)
         if not meta:
-            raise MissingMetaError(f'Model {cls} does not have Meta class')
+            raise MissingMetaError(f'{cls} does not have Meta class')
 
-        opts = Options(meta=meta, model=cls)
+        opts = ModelMetaOptions(meta=meta, model=cls)
 
         setattr(cls, '_meta', opts)
         setattr(cls, 'df', lazy_func(cls._get_df))
@@ -282,16 +286,14 @@ class ModelMeta(type):
 
         return df
 
-
 class Model(metaclass=ModelMeta):
-    _meta: Options  # Defined to have autocompletion.
+    _meta: ModelMetaOptions  # Defined to have autocompletion.
 
     def __init__(self, **kwargs):
         for column, column_value in kwargs.items():
             if column not in self._meta.columns.get_model_columns():
                 raise ColumnNotExistsError(
                     f"{self} does not have column '{column}', columns are: {self.columns}")
-
             setattr(self, column, column_value)
 
         super().__init__()
@@ -325,6 +327,21 @@ class Model(metaclass=ModelMeta):
              environment: str = None,
              **kwargs):
 
+        """
+        Saves the dataframe to storage.
+
+        Parameters
+        ----------
+        to : Storage
+            The storage to save the dataframe to, if not provided the Meta's will be used.
+        format : DataFormat
+            The format to store the data into, not always needed for example in SQL databases.
+        table_name : str
+            The table name or file name that will be saved to, if not provided the Meta's will be used.
+        environment : str
+            The environment name/key that will be used, if not provided the default or Meta's will be used.
+
+        """
         storage = cls._get_storage_or_default(to, environment=environment)
         format = cls._get_format_or_default(format)
         table_name = table_name or cls._meta.table_name
