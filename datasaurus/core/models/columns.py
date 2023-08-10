@@ -249,7 +249,7 @@ class IntegerColumn(Column):
 
 class FloatColumn(Column):
     supported_dtypes = [polars.Float32, polars.Float64, polars.Decimal]
-    default_dtype = polars.Float32
+    default_dtype = polars.Float64
 
 
 class DateTimeColumn(Column):
