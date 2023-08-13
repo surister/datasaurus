@@ -106,8 +106,8 @@ class StorageGroup:
             except AttributeError:
                 raise Exception(f"Storage '{cls}' does not have environment '{env_key}'")
 
-
         raise CannotResolveEnvironmentException(
-            f'Neither DATASAURUS_ENVIRONMENT nor {cls.__name__}_ENVIRONMENT are defined but '
-            f'"from_env" needs any of these two defined in order to resolve the right storage.'
+            f"Neither 'DATASAURUS_ENVIRONMENT' nor '{cls.__name__}_ENVIRONMENT' environment "
+            "variables are defined but 'from_env' needs any of these two defined in order to "
+            "resolve the right storage."
         )

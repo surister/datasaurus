@@ -274,8 +274,8 @@ class ModelMeta(PreparedMeta):
 
         if missing_columns:
             raise ValueError(
-                f"Dataframe columns do not match. {missing_columns} df.columns: {df.columns},"
-                f" models: {cls._meta.columns.get_df_column_names()}"
+                f"Dataframe columns do not match. Missing columns: {missing_columns}, df.columns: {df.columns},"
+                f" model.columns: {cls._meta.columns.get_df_column_names()}"
             )
 
         # Column dtype casting.
