@@ -6,7 +6,7 @@ import polars
 from polars import DataFrame
 from polars.type_aliases import FrameInitTypes, SchemaDefinition
 
-from datasaurus import classproperty
+from datasaurus.core import classproperty
 from datasaurus.core.models.exceptions import MissingMetaError, FormatNotSupportedByModelError, \
     FormatNeededError, ColumnNotExistsError
 from datasaurus.core.storage.format import DataFormat
@@ -286,6 +286,7 @@ class ModelMeta(PreparedMeta):
 
         return df
 
+
 class Model(metaclass=ModelMeta):
     _meta: ModelMetaOptions  # Defined to have autocompletion.
 
@@ -303,7 +304,22 @@ class Model(metaclass=ModelMeta):
         return f'<{cls_name}: {cls_name} object({", ".join(self.columns)})>'
 
     @classproperty
-    def columns(cls):
+    def columns(cls) -> list[Column]:
+        """
+        Columns of the model.
+
+        ```
+        Examples:
+            >>> class MyModel(Model):
+            ...     col1 = StringColumn()
+            ...     col2 = IntegerColumn()
+            ...
+            >>> MyModel.columns
+                ["col1", "col2"]
+
+        Returns:
+            List of the model's columns
+        """
         return cls._meta.columns.get_model_columns()
 
     @classmethod
@@ -330,16 +346,18 @@ class Model(metaclass=ModelMeta):
         """
         Saves the dataframe to storage.
 
-        Parameters
-        ----------
-        to : Storage
-            The storage to save the dataframe to, if not provided the Meta's will be used.
-        format : DataFormat
-            The format to store the data into, not always needed for example in SQL databases.
-        table_name : str
-            The table name or file name that will be saved to, if not provided the Meta's will be used.
-        environment : str
-            The environment name/key that will be used, if not provided the default or Meta's will be used.
+        Parameters:
+            to:
+                The storage to save the dataframe to, if not provided the Meta's will be used.
+            format:
+                The format to store the data into, not always needed for example in SQL databases.
+            table_name:
+                The table name or file name that will be saved to, if not provided the Meta's will be used.
+            environment:
+                The environment name/key that will be used, if not provided the default or Meta's will be used.
+
+        Returns:
+            (None):
 
         """
         storage = cls._get_storage_or_default(to, environment=environment)
