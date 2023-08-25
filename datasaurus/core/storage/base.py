@@ -4,7 +4,7 @@ from typing import Union, Optional
 
 import polars
 
-from datasaurus import classproperty
+from datasaurus.core import classproperty
 from datasaurus.core.storage.format import DataFormat, FormatNotSet
 
 

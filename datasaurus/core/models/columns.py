@@ -199,7 +199,7 @@ class Columns(Collection):
             for column in self._columns
         ]
 
-    def get_model_columns(self) -> list:
+    def get_model_columns(self) -> list[Column]:
         """
         Returns the list of columns as defined in the Model, they might actually not be
         the one used on read/write opperations.
