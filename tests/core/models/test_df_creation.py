@@ -23,7 +23,7 @@ def test_df_creation_from_calculation(model_class_without_local_data):
     """
     set_global_env('local')
     expected_df = polars.DataFrame({"col1": [1, 2], "col2": [3, 4]},
-                                   schema={'col1': polars.Utf8, 'col2': polars.Int32}
+                                   schema={'col1': polars.Utf8, 'col2': polars.Int64}
                                    )
 
     expected_data = {"col1": ['1', '6'], "col2": [3, 5]}
@@ -47,8 +47,7 @@ def test_df_creation_from_calculation(model_class_without_local_data):
     polars.testing.assert_frame_equal(FooModel.df,
                                       polars.DataFrame(expected_data,
                                                        schema={'col1': polars.Utf8,
-                                                               'col2': polars.Int32}),
-                                      check_dtype=False)
+                                                               'col2': polars.Int64}))
 
 
 def test_df_creation_missing_columns(model_class_with_local_data):
