@@ -39,11 +39,11 @@ df.columns: ['col1', 'col2', 'col3'], models: ['col1', 'col2'] because there wil
 has too many columns, and we just don't want to write them.
 - [x] Remove options in Columns such as 'unique', I tried in a ETL and did not like it at all working with it.
 - [x] Make columns importable from datasaurus.core.models
+- [x] Unit test model inheritance.
 
 # Models
 - [ ] Come up with a pattern for 1:n and n:n model transformations.
 - [ ] Cannot write from one mixin to another (create df from one storage and save it to another if it's of different type)
-- [ ] Create unit tests for factory (once the three above are done) 
 
 # Columns
 - [ ] Add validations.
@@ -66,12 +66,13 @@ to read but not to write.
 datasaurus - DEBUG - [ModelFactory] Execution strategy will be PythonMultiprocessing(processes=24)
 datasaurus - DEBUG - [ModelIO] Trying to read Model from storage {storageinfo}
 datasaurus - DEBUG - [StorageIO] Executing SQL {...} to see if table exists
+- [ ] Refactor TransformationMetaOptions with ModelMetaOptions, anything we can elegantly abstract?
 
 # Things where unittests are missing
-- [ ] Unit test model inheritance.
 - [ ] Add unit tests for enforce_dtype
 - [ ] Unit test dataframe creation (1)
-
+- [ ] Unit tests for factory (once the three above are done) 
+- 
 # Nice things to have
 - [ ] Support Azure blob storage read/write
 - [ ] Support S3 storage read/write
