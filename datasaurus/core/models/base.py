@@ -118,6 +118,7 @@ class PreparedMeta(ABCMeta):
 
         return _new_class
 
+
 class ModelMeta(PreparedMeta):
     df: DataFrame
     _meta: ModelMetaOptions
@@ -176,7 +177,7 @@ class ModelMeta(PreparedMeta):
             if file_extension:
                 return file_extension
 
-        return None
+        return
 
     def _create_df(cls, storage: Optional[Storage]) -> DataFrame:
         """
