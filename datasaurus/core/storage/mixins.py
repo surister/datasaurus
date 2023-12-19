@@ -47,7 +47,7 @@ class SQLStorageOperationsMixin(StorageOperationMixinBase):
         )
         df.write_database(
             table_name=file_name,
-            connection_uri=self.get_uri(),
+            connection=self.get_uri(),
             if_exists=if_exists,
         )
         datasaurus_logger.debug(f'{file_name} written correctly.')
