@@ -1,4 +1,11 @@
 site_name: Datasaurus documentation
+watch: [datasaurus/]
+nav:
+  - Home:
+      - Index: index.md
+      - Setup: setup.md
+  - Api Reference:
+      - Docs: reference/
 theme:
   name: material
   palette:
@@ -19,11 +26,35 @@ theme:
     repo: fontawesome/brands/github
   features:
     - content.code.copy
-
-
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [., datasaurus, datasaurus/*, ..]
+          import:
+          - https://docs.python.org/3/objects.inv
+          options:
+            docstring_options:
+              ignore_init_summary: true
+            docstring_section_style: list
+            heading_level: 1
+            inherited_members: true
+            merge_init_into_class: true
+            separate_signature: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
 repo_name: Datasaurus
 repo_url: https://www.github.com/surister/datasaurus
-
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
