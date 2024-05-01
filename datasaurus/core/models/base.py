@@ -365,7 +365,7 @@ class Model(metaclass=ModelMeta):
         format = cls._get_format_or_default(format)
         table_name = table_name or cls._meta.table_name
 
-        if format and not storage.supports_format(format):
+        if storage.needs_format and format and not storage.supports_format(format):
             raise FormatNotSupportedByModelError(
                 f"Storage of type '{type(storage)}' does not support format '{format}',"
                 f" supported formats by this storage are '{storage.supported_formats}'"
